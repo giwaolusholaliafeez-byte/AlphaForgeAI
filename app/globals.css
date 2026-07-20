@@ -1,0 +1,168 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    /* Brand Colors - AlphaForge AI */
+    --background: 225 71% 7%; /* #0B0F1A - Deep Navy */
+    --foreground: 0 0% 100%;
+    
+    --card: 220 33% 14%; /* #1E293B - Slate */
+    --card-foreground: 0 0% 100%;
+    
+    --popover: 220 33% 14%;
+    --popover-foreground: 0 0% 100%;
+    
+    --primary: 217 91% 53%; /* #2563EB - Royal Blue */
+    --primary-foreground: 0 0% 100%;
+    
+    --secondary: 220 33% 14%;
+    --secondary-foreground: 0 0% 100%;
+    
+    --muted: 220 33% 14%;
+    --muted-foreground: 215 10% 67%; /* #A1A7B3 - Steel */
+    
+    --accent: 174 100% 38%; /* #00C2A8 - Teal */
+    --accent-foreground: 0 0% 100%;
+    
+    --gold: 45 100% 48%; /* #F4B000 - Gold */
+    --gold-foreground: 0 0% 100%;
+    
+    --destructive: 0 72% 51%;
+    --destructive-foreground: 0 0% 100%;
+    
+    --success: 142 76% 36%;
+    --success-foreground: 0 0% 100%;
+    
+    --border: 220 33% 14%;
+    --input: 220 33% 14%;
+    --ring: 217 91% 53%;
+    
+    --radius: 0.5rem;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  
+  body {
+    @apply bg-background text-foreground;
+    font-feature-settings: "rlig" 1, "calt" 1;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+  
+  /* Typography */
+  h1, h2, h3, h4, h5, h6 {
+    @apply font-medium tracking-tight;
+  }
+  
+  /* Tabular numbers for financial data */
+  .tabular-nums {
+    font-variant-numeric: tabular-nums;
+  }
+  
+  /* Scrollbar styling */
+  ::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+  
+  ::-webkit-scrollbar-track {
+    @apply bg-transparent;
+  }
+  
+  ::-webkit-scrollbar-thumb {
+    @apply bg-[#1E293B] rounded-full;
+  }
+  
+  ::-webkit-scrollbar-thumb:hover {
+    @apply bg-[#2D3A4F];
+  }
+  
+  /* Focus styles */
+  *:focus-visible {
+    @apply outline-none ring-2 ring-[#2563EB] ring-offset-2 ring-offset-[#0B0F1A];
+  }
+  
+  /* Reduced motion */
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+    }
+  }
+}
+
+@layer utilities {
+  .text-balance {
+    text-wrap: balance;
+  }
+  
+  /* Custom color utilities */
+  .bg-gold {
+    background-color: #F4B000;
+  }
+  .text-gold {
+    color: #F4B000;
+  }
+  .border-gold {
+    border-color: #F4B000;
+  }
+  
+  .bg-teal {
+    background-color: #00C2A8;
+  }
+  .text-teal {
+    color: #00C2A8;
+  }
+  .border-teal {
+    border-color: #00C2A8;
+  }
+  
+  .bg-royal-blue {
+    background-color: #2563EB;
+  }
+  .text-royal-blue {
+    color: #2563EB;
+  }
+  .border-royal-blue {
+    border-color: #2563EB;
+  }
+  
+  /* Surface variations */
+  .surface-elevated {
+    @apply bg-[#151D2C];
+  }
+  
+  .surface-hover {
+    @apply hover:bg-white/[0.04] transition-colors duration-150;
+  }
+  
+  .surface-selected {
+    @apply bg-[#2563EB]/10;
+  }
+  
+  .border-subtle {
+    border-color: rgba(255, 255, 255, 0.06);
+  }
+  
+  .border-subtle-hover {
+    border-color: rgba(255, 255, 255, 0.1);
+  }
+  
+  /* Premium card */
+  .card-premium {
+    @apply bg-[#111827] border border-white/[0.06] rounded-lg;
+  }
+  
+  .card-premium-hover {
+    @apply hover:border-white/[0.08] transition-colors duration-150;
+  }
+}

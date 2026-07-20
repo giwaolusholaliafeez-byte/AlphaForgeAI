@@ -1,0 +1,15 @@
+.env
+.env.local
+.env.*.local
+node_modules
+node_modules
+node_modules
+node_modules/
+.next/
+.env*.local
+.vercel/
+*.log
+tsconfig.tsbuildinfo
+.fix-backups/
+*.before-*
+.DS_Store

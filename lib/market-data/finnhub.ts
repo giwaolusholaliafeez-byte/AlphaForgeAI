@@ -1,0 +1,138 @@
+import { FinnhubQuote, FinnhubSearchResult, FinnhubProfile, StockAsset, MarketDataError } from "./types";
+
+const FINNHUB_BASE_URL = "https://finnhub.io/api/v1";
+
+export class FinnhubClient {
+  private apiKey: string;
+  private baseUrl: string;
+
+  constructor(apiKey: string) {
+    this.apiKey = apiKey;
+    this.baseUrl = FINNHUB_BASE_URL;
+  }
+
+  private async fetch<T>(endpoint: string, params?: Record<string, string>): Promise<T> {
+    const url = new URL(`${this.baseUrl}${endpoint}`);
+    url.searchParams.append("token", this.apiKey);
+
+    if (params) {
+      Object.entries(params).forEach(([key, value]) => {
+        url.searchParams.append(key, value);
+      });
+    }
+
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 10000);
+
+    try {
+      const response = await fetch(url.toString(), {
+        headers: {
+          Accept: "application/json",
+        },
+        signal: controller.signal,
+        next: { revalidate: 60 },
+      });
+
+      clearTimeout(timeoutId);
+
+      if (!response.ok) {
+        let errorMessage = `HTTP ${response.status}`;
+        try {
+          const errorData = await response.json();
+          errorMessage = errorData.error || errorMessage;
+        } catch {
+          errorMessage = response.statusText || errorMessage;
+        }
+
+        throw {
+          code: `FINNHUB_${response.status}`,
+          message: errorMessage,
+          source: "finnhub",
+        } as MarketDataError;
+      }
+
+      return await response.json();
+    } catch (error) {
+      clearTimeout(timeoutId);
+      if (error instanceof Error && error.name === "AbortError") {
+        throw {
+          code: "FINNHUB_TIMEOUT",
+          message: "Request to Finnhub timed out",
+          source: "finnhub",
+        } as MarketDataError;
+      }
+      throw error;
+    }
+  }
+
+  async getQuote(symbol: string): Promise<FinnhubQuote> {
+    return this.fetch<FinnhubQuote>("/quote", { symbol });
+  }
+
+  async search(query: string): Promise<FinnhubSearchResult> {
+    return this.fetch<FinnhubSearchResult>("/search", { q: query });
+  }
+
+  async getProfile(symbol: string): Promise<FinnhubProfile> {
+    return this.fetch<FinnhubProfile>("/stock/profile2", { symbol });
+  }
+
+  async getMultipleQuotes(symbols: string[]): Promise<Map<string, FinnhubQuote>> {
+    const results = new Map<string, FinnhubQuote>();
+
+    const batchSize = 10;
+    for (let i = 0; i < symbols.length; i += batchSize) {
+      const batch = symbols.slice(i, i + batchSize);
+      const promises = batch.map(async (symbol) => {
+        try {
+          const quote = await this.getQuote(symbol);
+          results.set(symbol, quote);
+        } catch (error) {
+          console.warn(`Failed to fetch quote for ${symbol}:`, error);
+        }
+      });
+      await Promise.all(promises);
+
+      if (i + batchSize < symbols.length) {
+        await new Promise((resolve) => setTimeout(resolve, 250));
+      }
+    }
+
+    return results;
+  }
+
+  async getCandles(symbol: string, resolution: string, from: number, to: number): Promise<any> {
+    return this.fetch("/stock/candle", {
+      symbol,
+      resolution,
+      from: from.toString(),
+      to: to.toString(),
+    });
+  }
+
+  normalizeQuote(symbol: string, quote: FinnhubQuote, profile?: FinnhubProfile): StockAsset {
+    const now = new Date().toISOString();
+
+    return {
+      id: symbol,
+      symbol: symbol,
+      name: profile?.name || symbol,
+      type:
+        symbol.startsWith("SPY") || symbol.startsWith("QQQ") || symbol.startsWith("DIA") || symbol.startsWith("VOO")
+          ? "etf"
+          : "stock",
+      price: quote.c || null,
+      change: quote.d || null,
+      changePercent: quote.dp || null,
+      currency: profile?.currency || "USD",
+      marketCap: profile?.marketCapitalization || null,
+      volume: null,
+      logo: profile?.logo || null,
+      exchange: (profile?.exchange || null) ?? "",
+      industry: profile?.finnhubIndustry || null,
+      country: profile?.country || null,
+      lastUpdated: quote.t ? new Date(quote.t * 1000).toISOString() : now,
+      source: "finnhub",
+    };
+  }
+}

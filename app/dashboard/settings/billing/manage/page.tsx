@@ -1,0 +1,5 @@
+import Link from 'next/link';
+import { getUserSubscription } from '@/lib/billing/entitlements';
+import BillingActions from '@/components/billing/BillingActions';
+
+export default async function ManageBillingPage() { const subscription = await getUserSubscription(); const canCancel = subscription.plan === 'pro' && subscription.status === 'active' && !subscription.cancelAtPeriodEnd; return <div className="max-w-3xl space-y-6"><div><Link href="/dashboard/settings/billing" className="text-sm text-[#60A5FA]">← Back to Billing</Link><h1 className="mt-4 text-2xl font-semibold text-white">Manage Subscription</h1><p className="mt-2 text-sm text-[#A1A7B3]">Manage your AlphaForge Pro recurring billing through Paystack.</p></div><section className="rounded-xl border border-white/[0.06] bg-white/[0.02] p-6"><p className="text-sm text-[#A1A7B3]">Current plan</p><p className="mt-1 text-xl font-semibold text-white">{subscription.plan === 'pro' ? 'Pro' : 'Free'}</p>{subscription.plan === 'pro' ? <BillingActions canCancel={canCancel} /> : <p className="mt-5 text-sm text-[#A1A7B3]">There is no active recurring subscription to manage.</p>}</section></div>; }
