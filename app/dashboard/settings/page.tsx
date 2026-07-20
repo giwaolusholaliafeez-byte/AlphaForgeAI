@@ -19,6 +19,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
+import NotificationPermissionButton from "@/components/dashboard/NotificationPermissionButton";
 
 type SettingsSection = "profile" | "appearance" | "preferences" | "notifications" | "security" | "account";
 
@@ -143,10 +144,14 @@ export default function SettingsPage() {
 
       case "notifications":
         return (
-          <div className="p-3 rounded-lg bg-[#F4B000]/5 border border-[#F4B000]/10">
-            <p className="text-sm text-[#A1A7B3]">
-              ⚠️ Notification preferences will be available once alert notifications are fully implemented.
-            </p>
+          <div className="space-y-4 rounded-lg border border-white/[0.06] bg-white/[0.02] p-4">
+            <div>
+              <p className="text-sm font-medium text-white">Browser notifications</p>
+              <p className="mt-1 text-sm text-[#A1A7B3]">
+                Allow AlphaForge to request permission to notify you about supported account and market events.
+              </p>
+            </div>
+            <NotificationPermissionButton compact />
           </div>
         );
 

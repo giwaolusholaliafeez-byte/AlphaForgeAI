@@ -64,7 +64,7 @@ export default function DashboardMobileNav({ user }: DashboardMobileNavProps) {
         variant="ghost"
         size="icon"
         onClick={() => setOpen(true)}
-        className="md:hidden text-white h-8 w-8"
+        className="h-10 w-10 shrink-0 text-white md:hidden"
         aria-label="Open navigation menu"
       >
         <Menu className="h-4.5 w-4.5" />
@@ -82,7 +82,7 @@ export default function DashboardMobileNav({ user }: DashboardMobileNavProps) {
       {/* Drawer */}
       <div
         className={cn(
-          "fixed top-0 left-0 h-full w-[280px] sm:w-[320px] bg-[#0B0F1A] border-r border-white/[0.06] z-50 md:hidden transition-transform duration-300 ease-out",
+          "fixed inset-y-0 left-0 z-50 h-[100dvh] w-[min(86vw,320px)] overscroll-contain border-r border-white/[0.06] bg-[#0B0F1A] pb-[env(safe-area-inset-bottom)] pt-[env(safe-area-inset-top)] transition-transform duration-300 ease-out md:hidden",
           open ? "translate-x-0" : "-translate-x-full"
         )}
         role="dialog"
@@ -138,7 +138,7 @@ export default function DashboardMobileNav({ user }: DashboardMobileNavProps) {
                   onClick={() => setOpen(false)}
                   aria-current={isActive ? "page" : undefined}
                   className={cn(
-                    "flex items-center space-x-3 px-3 py-2 rounded-lg text-sm transition-colors duration-150",
+                    "flex min-h-11 items-center space-x-3 rounded-lg px-3 py-2 text-sm transition-colors duration-150",
                     isActive
                       ? "bg-[#2563EB]/10 text-[#2563EB]"
                       : "text-[#A1A7B3] hover:text-white hover:bg-white/[0.04]"

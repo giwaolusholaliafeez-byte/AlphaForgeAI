@@ -2,12 +2,13 @@
 
 import { useState } from "react";
 import { usePathname } from "next/navigation";
-import { Search, Bell, Command, Menu } from "lucide-react";
+import { Search, Command } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import DashboardMobileNav from "./DashboardMobileNav";
 import UserMenu from "./UserMenu";
 import { cn } from "@/lib/utils";
+import NotificationPermissionButton from "./NotificationPermissionButton";
 
 interface DashboardHeaderProps {
   user: {
@@ -35,10 +36,10 @@ export default function DashboardHeader({ user }: DashboardHeaderProps) {
     <header className="sticky top-0 z-40 bg-[#0B0F1A]/80 backdrop-blur-sm border-b border-white/[0.06]">
       <div className="flex items-center justify-between h-14 px-4 md:px-6">
         {/* Left - Page Title & Mobile Menu */}
-        <div className="flex items-center space-x-4 min-w-0">
+        <div className="flex min-w-0 items-center gap-2 sm:gap-4">
           <DashboardMobileNav user={user} />
-          <div className="hidden md:block">
-            <h1 className="text-sm font-semibold text-white truncate">
+          <div className="min-w-0">
+            <h1 className="truncate text-sm font-semibold text-white sm:text-base">
               {getPageTitle()}
             </h1>
           </div>
@@ -72,14 +73,7 @@ export default function DashboardHeader({ user }: DashboardHeaderProps) {
 
         {/* Right - Actions */}
         <div className="flex items-center space-x-1 flex-shrink-0">
-          <Button 
-            variant="ghost" 
-            size="icon" 
-            className="h-8 w-8 text-[#A1A7B3] hover:text-white hover:bg-white/[0.04] relative"
-            aria-label="Notifications"
-          >
-            <Bell className="h-4.5 w-4.5" />
-          </Button>
+          <NotificationPermissionButton />
           
           <div className="w-px h-5 bg-white/[0.06] mx-1" />
           
@@ -91,7 +85,7 @@ export default function DashboardHeader({ user }: DashboardHeaderProps) {
       <div className="px-4 pb-3 md:hidden">
         <form onSubmit={handleSearch} className="relative">
           <div className={cn(
-            "flex items-center rounded-lg border transition-colors duration-200",
+              "flex h-10 items-center rounded-lg border transition-colors duration-200",
             isSearchFocused 
               ? "border-[#2563EB] bg-[#0B0F1A] ring-1 ring-[#2563EB]/20" 
               : "border-white/[0.06] bg-white/[0.03]"
@@ -102,7 +96,7 @@ export default function DashboardHeader({ user }: DashboardHeaderProps) {
               placeholder="Search..."
               onFocus={() => setIsSearchFocused(true)}
               onBlur={() => setIsSearchFocused(false)}
-              className="pl-9 h-8 bg-transparent border-none text-white placeholder:text-[#A1A7B3] text-sm focus:ring-0 focus:outline-none"
+              className="h-10 pl-9 bg-transparent border-none text-white placeholder:text-[#A1A7B3] text-sm focus:ring-0 focus:outline-none"
               aria-label="Global search"
             />
           </div>
