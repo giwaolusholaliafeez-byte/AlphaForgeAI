@@ -12,41 +12,11 @@ import AIInsightCard from "@/components/dashboard/overview/AIInsightCard";
 import MarketMovers from "@/components/dashboard/overview/MarketMovers";
 import WatchlistPreview from "@/components/dashboard/overview/WatchlistPreview";
 import NewsPreview from "@/components/dashboard/overview/NewsPreview";
+import FirstActionCard from "@/components/dashboard/FirstActionCard";
+import type { UserType } from "@/lib/accounts/types";
+import { getLiveDashboardMarketData } from "@/lib/dashboard/live-market";
 
 // Mock data - will be replaced with real data in later phases
-const mockMarketItems = [
-  { label: "S&P 500", symbol: "SPY", price: 589.45, change: 4.82, changePercent: 0.82 },
-  { label: "NASDAQ", symbol: "QQQ", price: 467.33, change: 5.72, changePercent: 1.24 },
-  { label: "Bitcoin", symbol: "BTC", price: 68234, change: 1436, changePercent: 2.15 },
-  { label: "Gold", symbol: "XAU", price: 2345.67, change: 10.50, changePercent: 0.45 },
-  { label: "VIX", symbol: "VIX", price: 15.30, change: -0.20, changePercent: -1.29 },
-];
-
-const mockGainers = [
-  { symbol: "NVDA", name: "NVIDIA", price: "$145.67", change: "+8.42%", changePercent: 8.42, positive: true, href: "/dashboard/markets/stock/NVDA" },
-  { symbol: "AMD", name: "AMD", price: "$156.23", change: "+5.31%", changePercent: 5.31, positive: true, href: "/dashboard/markets/stock/AMD" },
-  { symbol: "META", name: "Meta", price: "$356.78", change: "+4.23%", changePercent: 4.23, positive: true, href: "/dashboard/markets/stock/META" },
-];
-
-const mockLosers = [
-  { symbol: "INTC", name: "Intel", price: "$34.56", change: "-4.67%", changePercent: -4.67, positive: false, href: "/dashboard/markets/stock/INTC" },
-  { symbol: "BA", name: "Boeing", price: "$178.90", change: "-3.45%", changePercent: -3.45, positive: false, href: "/dashboard/markets/stock/BA" },
-];
-
-const mockWatchlist = [
-  { symbol: "NVDA", name: "NVIDIA", price: 145.67, change: 8.42, positive: true, href: "/dashboard/markets/stock/NVDA" },
-  { symbol: "AAPL", name: "Apple", price: 178.34, change: 1.10, positive: true, href: "/dashboard/markets/stock/AAPL" },
-  { symbol: "MSFT", name: "Microsoft", price: 412.89, change: 0.85, positive: true, href: "/dashboard/markets/stock/MSFT" },
-  { symbol: "AMZN", name: "Amazon", price: 189.67, change: 1.70, positive: true, href: "/dashboard/markets/stock/AMZN" },
-  { symbol: "GOOGL", name: "Alphabet", price: 175.45, change: 2.30, positive: true, href: "/dashboard/markets/stock/GOOGL" },
-];
-
-const mockNews = [
-  { id: "1", title: "Federal Reserve signals potential rate cuts in December", source: "Financial Times", time: "2h ago", sentiment: "positive" as const, href: "#" },
-  { id: "2", title: "NVIDIA AI chip demand surges 40% QoQ", source: "Bloomberg", time: "3h ago", sentiment: "positive" as const, href: "#" },
-  { id: "3", title: "Tech sector leads market rally, S&P 500 hits new high", source: "Reuters", time: "4h ago", sentiment: "positive" as const, href: "#" },
-];
-
 export default async function DashboardPage() {
   const supabase = await createClient();
   const { data: { user }, error } = await supabase.auth.getUser();
@@ -57,6 +27,9 @@ export default async function DashboardPage() {
 
   const isDemo = isDemoAccount(user.email);
   const generatedAt = new Date().toISOString();
+  const liveMarket = await getLiveDashboardMarketData();
+  const { data: profile } = await supabase.from("profiles").select("user_type").eq("user_id", user.id).maybeSingle();
+  const userType: UserType = profile?.user_type === "trader" || profile?.user_type === "exploring" ? profile.user_type : "investor";
 
   // Get portfolio data
   let portfolioData = null;
@@ -95,16 +68,11 @@ export default async function DashboardPage() {
   };
 
   const displayPortfolio = isDemo ? demoPortfolioData : portfolioData;
+  const hasPaperOrders = !isDemo ? Boolean((await supabase.from("paper_orders").select("id", { count: "exact", head: true }).eq("user_id", user.id)).count) : true;
 
-  // Format market items
-  const marketItems = mockMarketItems.map(item => ({
-    label: item.label,
-    symbol: item.symbol,
-    price: item.price,
-    change: item.change,
-    changePercent: item.changePercent,
-    href: `/dashboard/markets?type=${item.symbol === 'BTC' ? 'crypto' : 'stocks'}`,
-  }));
+  const marketItems = liveMarket.slice(0, 5);
+  const moverItems = liveMarket.filter((item) => item.changePercent !== null && item.symbol !== "SPY" && item.symbol !== "QQQ" && item.symbol !== "VOO").sort((a, b) => (b.changePercent ?? 0) - (a.changePercent ?? 0));
+  const toMover = (item: (typeof liveMarket)[number]) => ({ symbol: item.symbol, name: item.name, price: item.price === null ? "—" : `$${item.price.toLocaleString(undefined, { maximumFractionDigits: 2 })}`, change: item.changePercent === null ? "—" : `${item.changePercent >= 0 ? "+" : ""}${item.changePercent.toFixed(2)}%`, changePercent: item.changePercent ?? 0, positive: (item.changePercent ?? 0) >= 0, href: item.href });
 
   return (
     <div className="space-y-6">
@@ -120,6 +88,8 @@ export default async function DashboardPage() {
           Last updated: {formatPortfolioDateTime(generatedAt)}
         </p>
       </div>
+
+      {!isDemo && ((userType === "investor" && !portfolioData) || (userType === "trader" && !hasPaperOrders) || userType === "exploring") && <FirstActionCard userType={userType} />}
 
       {/* Market Status Strip */}
       <MarketStatusStrip items={marketItems} />
@@ -146,12 +116,12 @@ export default async function DashboardPage() {
       {/* Supporting Sections - Two Column */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         <MarketMovers
-          items={mockGainers}
+          items={moverItems.filter((item) => (item.changePercent ?? 0) > 0).slice(0, 5).map(toMover)}
           title="Top Gainers"
           viewAllHref="/dashboard/markets"
         />
         <MarketMovers
-          items={mockLosers}
+          items={moverItems.filter((item) => (item.changePercent ?? 0) < 0).slice(-5).reverse().map(toMover)}
           title="Top Losers"
           viewAllHref="/dashboard/markets"
         />
@@ -159,8 +129,8 @@ export default async function DashboardPage() {
 
       {/* Watchlist and News */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-        <WatchlistPreview items={mockWatchlist} count={mockWatchlist.length} />
-        <NewsPreview items={mockNews} />
+        <WatchlistPreview items={[]} count={0} />
+        <NewsPreview items={[]} />
       </div>
     </div>
   );

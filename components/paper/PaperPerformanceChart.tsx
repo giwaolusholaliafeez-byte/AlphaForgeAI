@@ -1,0 +1,7 @@
+"use client";
+
+import { Area, AreaChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
+
+export default function PaperPerformanceChart({ data }: { data: Array<{ date: string; value: number }> }) {
+  return <section className="rounded-xl border border-white/[0.06] bg-white/[0.02] p-5"><div className="flex items-center justify-between"><div><h2 className="font-medium text-white">Buying power history</h2><p className="mt-1 text-xs text-[#A1A7B3]">Cash movement from paper transactions</p></div><span className="rounded-full bg-[#F4B000]/10 px-2 py-1 text-[10px] uppercase tracking-wider text-[#F4B000]">Paper money</span></div>{data.length > 1 ? <div className="mt-5 h-48 w-full"><ResponsiveContainer width="100%" height="100%"><AreaChart data={data}><defs><linearGradient id="paperCash" x1="0" y1="0" x2="0" y2="1"><stop offset="5%" stopColor="#2563EB" stopOpacity={0.35} /><stop offset="95%" stopColor="#2563EB" stopOpacity={0} /></linearGradient></defs><XAxis dataKey="date" hide /><YAxis hide domain={['auto', 'auto']} /><Tooltip contentStyle={{ background: '#1E293B', border: '1px solid rgba(255,255,255,.08)', borderRadius: 8, color: '#fff' }} formatter={(value: number) => [`$${value.toLocaleString()}`, 'Buying power']} /><Area type="monotone" dataKey="value" stroke="#60A5FA" fill="url(#paperCash)" strokeWidth={2} /></AreaChart></ResponsiveContainer></div> : <div className="flex h-48 items-center justify-center text-center text-sm text-[#A1A7B3]">Complete paper trades to build your history chart.</div>}</section>;
+}

@@ -56,7 +56,7 @@ export default function MarketTable({
 
   return (
     <div className={cn("bg-[#1E293B] rounded-lg border border-[#1E293B] overflow-hidden", className)}>
-      <div className="overflow-x-auto">
+      <div className="hidden overflow-x-auto md:block">
         <table className="w-full text-sm">
           <thead>
             <tr className="border-b border-white/[0.06] text-[#A1A7B3]">
@@ -124,6 +124,12 @@ export default function MarketTable({
             })}
           </tbody>
         </table>
+      </div>
+      <div className="divide-y divide-white/[0.06] md:hidden">
+        {rows.map((row) => {
+          const isPositive = row.change !== null && row.change >= 0;
+          return <Link key={row.id} href={row.href} className="block p-4 active:bg-white/[0.04]"><div className="flex items-start justify-between gap-3"><div className="min-w-0"><p className="font-medium text-white">{row.symbol}</p><p className="truncate text-xs text-[#A1A7B3]">{row.name}</p></div><div className="text-right"><p className="font-medium tabular-nums text-white">{formatPrice(row.price)}</p><p className={cn("mt-1 flex items-center justify-end gap-0.5 text-xs font-medium", isPositive ? "text-green-500" : "text-red-500")}>{isPositive ? <ArrowUp className="h-3 w-3" /> : <ArrowDown className="h-3 w-3" />}{row.changePercent === null ? "—" : `${isPositive ? "+" : ""}${row.changePercent.toFixed(2)}%`}</p></div></div><div className="mt-3 flex gap-4 text-xs text-[#A1A7B3]"><span>Change {row.change === null ? "—" : `${isPositive ? "+" : ""}${row.change.toFixed(2)}`}</span>{showMarketCap && <span>Cap {formatLargeNumber(row.marketCap ?? null)}</span>}{showVolume && <span>Vol {formatLargeNumber(row.volume ?? null)}</span>}</div></Link>;
+        })}
       </div>
     </div>
   );

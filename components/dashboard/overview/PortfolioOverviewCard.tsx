@@ -58,11 +58,7 @@ export default function PortfolioOverviewCard({
         </div>
         <h3 className="text-sm font-medium text-white mb-1">No Portfolio Yet</h3>
         <p className="text-xs text-[#A1A7B3] mb-4">Create your first portfolio to start tracking</p>
-        {onCreatePortfolio && (
-          <Button onClick={onCreatePortfolio} className="bg-[#2563EB] hover:bg-[#2563EB]/90 text-white text-sm">
-            Create Portfolio
-          </Button>
-        )}
+        {onCreatePortfolio ? <Button onClick={onCreatePortfolio} className="bg-[#2563EB] hover:bg-[#2563EB]/90 text-white text-sm">Create Portfolio</Button> : <Button asChild className="bg-[#2563EB] hover:bg-[#2563EB]/90 text-white text-sm"><Link href="/dashboard/portfolio">Create Portfolio</Link></Button>}
       </div>
     );
   }
