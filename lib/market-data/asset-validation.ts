@@ -1,5 +1,5 @@
-export function validateAssetType(type: string): type is 'stock' | 'etf' | 'crypto' {
-  return ['stock', 'etf', 'crypto'].includes(type);
+export function validateAssetType(type: string): type is 'stock' | 'etf' | 'crypto' | 'fx' | 'index_proxy' {
+  return ['stock', 'etf', 'crypto', 'fx', 'index_proxy'].includes(type);
 }
 
 export function validateStockSymbol(symbol: string): boolean {
@@ -10,6 +10,10 @@ export function validateStockSymbol(symbol: string): boolean {
 export function validateCryptoId(id: string): boolean {
   // Allow lowercase letters, numbers, and hyphens
   return /^[a-z0-9-]{1,50}$/.test(id);
+}
+
+export function validateForexPair(id: string): boolean {
+  return /^(?:[A-Za-z]{3}[\/_-]?[A-Za-z]{3})$/.test(id);
 }
 
 export function normalizeAssetType(type: string): string {

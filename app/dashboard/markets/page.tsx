@@ -132,6 +132,10 @@ export default function MarketsPage() {
   };
 
   const handleAssetClick = (asset: any) => {
+    if (activeTab === 'fx') {
+      router.push(`/dashboard/markets/fx/${asset.id}`);
+      return;
+    }
     setSelectedAsset(asset);
     setDrawerOpen(true);
   };

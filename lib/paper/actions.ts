@@ -5,7 +5,7 @@ import { revalidatePath } from 'next/cache';
 import { z } from 'zod';
 import { getAssetDetail } from '@/lib/market-data/asset-details';
 
-const orderSchema = z.object({ clientOrderId: z.string().uuid(), assetType: z.enum(['stock', 'etf', 'crypto']), assetId: z.string().trim().min(1).max(100), symbol: z.string().trim().min(1).max(20), side: z.enum(['buy', 'sell']), quantity: z.number().finite().positive() });
+const orderSchema = z.object({ clientOrderId: z.string().uuid(), assetType: z.enum(['stock', 'etf', 'crypto', 'fx', 'index_proxy']), assetId: z.string().trim().min(1).max(100), symbol: z.string().trim().min(1).max(20), side: z.enum(['buy', 'sell']), quantity: z.number().finite().positive() });
 const previewSchema = orderSchema.omit({ clientOrderId: true });
 
 export async function getPaperOrderPreview(input: unknown): Promise<{ success: boolean; error?: string; preview?: { price: number; orderValue: number; buyingPowerBefore: number; buyingPowerAfter: number; ownedQuantity: number; remainingQuantity: number } }> {
@@ -62,5 +62,18 @@ export async function resetPaperAccount(): Promise<{ success: boolean; error?: s
   if (error) return { success: false, error: 'Paper account could not be reset.' };
   revalidatePath('/dashboard/paper');
   revalidatePath('/dashboard/accounts');
+  return { success: true };
+}
+
+export async function closePaperPosition(input: unknown): Promise<{ success: boolean; error?: string }> {
+  const parsed = z.object({ assetType: z.enum(['stock', 'etf', 'crypto', 'fx']), assetId: z.string().trim().min(1).max(100), symbol: z.string().trim().min(1).max(20) }).safeParse(input);
+  if (!parsed.success) return { success: false, error: 'Invalid position details.' };
+  const supabase = await createClient(); const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return { success: false, error: 'Unauthorized' };
+  const detail = await getAssetDetail(parsed.data.assetType, parsed.data.assetId); const price = detail.data?.price;
+  if (!Number.isFinite(price) || !price || price <= 0) return { success: false, error: 'Current market price is unavailable. The position was not closed.' };
+  const { error } = await supabase.rpc('close_paper_position', { p_asset_type: parsed.data.assetType, p_asset_id: parsed.data.assetId, p_symbol: parsed.data.symbol, p_execution_price: price });
+  if (error) return { success: false, error: error.message.includes('Position') ? error.message : 'Position could not be closed.' };
+  revalidatePath('/dashboard/paper'); revalidatePath('/dashboard/accounts'); revalidatePath('/dashboard/activity'); revalidatePath('/dashboard');
   return { success: true };
 }

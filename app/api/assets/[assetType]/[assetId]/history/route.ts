@@ -1,10 +1,10 @@
 import { NextResponse } from 'next/server';
 import { 
   getStockHistory, 
-  getCryptoHistory,
+  getCryptoHistory, getForexHistory,
   HISTORY_RANGES 
 } from '@/lib/market-data/asset-history';
-import { validateAssetType, validateStockSymbol, validateCryptoId } from '@/lib/market-data/asset-validation';
+import { validateAssetType, validateStockSymbol, validateCryptoId, validateForexPair } from '@/lib/market-data/asset-validation';
 
 type AssetRouteParams = {
   assetType: string;
@@ -18,6 +18,7 @@ export async function GET(
   const { assetType, assetId } = await params;
   const { searchParams } = new URL(request.url);
   const range = searchParams.get('range') || '1D';
+  const interval = searchParams.get('interval') || '1D';
 
   // Validate asset type
   if (!validateAssetType(assetType)) {
@@ -42,6 +43,8 @@ export async function GET(
         { status: 400 }
       );
     }
+  } else if (assetType === 'fx' && !validateForexPair(assetId)) {
+    return NextResponse.json({ error: 'Invalid forex pair', code: 'INVALID_PAIR' }, { status: 400 });
   }
 
   // Validate range
@@ -56,9 +59,11 @@ export async function GET(
   let history = null;
 
   if (assetType === 'stock' || assetType === 'etf') {
-    history = await getStockHistory(assetId, range);
+    history = await getStockHistory(assetId, range, interval);
   } else if (assetType === 'crypto') {
     history = await getCryptoHistory(assetId, range);
+  } else if (assetType === 'fx') {
+    history = await getForexHistory(assetId, range, interval);
   }
 
   if (!history) {

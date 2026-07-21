@@ -2,6 +2,8 @@ import { NextResponse } from 'next/server';
 import { FinnhubClient } from '@/lib/market-data/finnhub';
 import { CoinGeckoClient } from '@/lib/market-data/coingecko';
 import { MarketSearchResult, MarketDataError } from '@/lib/market-data/types';
+import { TwelveDataClient } from '@/lib/market-data/twelve-data';
+import { CURRENCY_PAIRS } from '@/lib/market-data/forex';
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
@@ -62,6 +64,24 @@ export async function GET(request: Request) {
     } catch (error) {
       console.warn('CoinGecko search failed:', error);
     }
+  }
+
+  if (type === 'all' || type === 'fx') {
+    const normalized = query.replace(/[^A-Za-z]/g, '').toLowerCase();
+    CURRENCY_PAIRS.filter((pair) => pair.id.replace('_', '').includes(normalized) || pair.display.toLowerCase().includes(query.toLowerCase())).slice(0, 10).forEach((pair) => results.push({ id: pair.id.replace('_', ''), symbol: pair.display, name: `${pair.base}/${pair.quote} foreign exchange`, type: 'fx', source: 'frankfurter' }));
+  }
+
+  const twelveKey = process.env.TWELVE_DATA_API_KEY;
+  if ((type === 'all' || type === 'stock' || type === 'etf' || type === 'fx') && twelveKey) {
+    try {
+      const response = await new TwelveDataClient(twelveKey).search(query);
+      response.data.slice(0, 10).forEach((item) => {
+        const isFx = item.instrument_type.toLowerCase().includes('forex');
+        const isEtf = item.instrument_type.toLowerCase().includes('etf');
+        const assetType = isFx ? 'fx' : isEtf ? 'etf' : 'stock';
+        if (type === 'all' || type === assetType) results.push({ id: isFx ? item.symbol.replace('/', '').toLowerCase() : item.symbol, symbol: item.symbol, name: item.name, type: assetType, exchange: item.exchange, source: 'twelvedata' });
+      });
+    } catch (error) { console.warn('Twelve Data search failed:', error); }
   }
 
   return NextResponse.json({ results });

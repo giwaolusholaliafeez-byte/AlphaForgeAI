@@ -1,6 +1,6 @@
 import { notFound } from "next/navigation";
 import { getAssetDetail } from "@/lib/market-data/asset-details";
-import { validateAssetType, validateStockSymbol, validateCryptoId } from "@/lib/market-data/asset-validation";
+import { validateAssetType, validateStockSymbol, validateCryptoId, validateForexPair } from "@/lib/market-data/asset-validation";
 import AssetHeader from "@/components/asset-details/AssetHeader";
 import AssetPrice from "@/components/asset-details/AssetPrice";
 import AssetChart from "@/components/asset-details/AssetChart";
@@ -36,6 +36,8 @@ export default async function AssetPage({ params }: AssetPageProps) {
     if (!validateCryptoId(assetId)) {
       notFound();
     }
+  } else if (assetType === "fx" && !validateForexPair(assetId)) {
+    notFound();
   } else {
     notFound();
   }

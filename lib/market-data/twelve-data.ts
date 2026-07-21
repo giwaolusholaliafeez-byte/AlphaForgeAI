@@ -10,6 +10,7 @@ export interface TwelveDataQuote {
   price: string | null;
   day_change: string | null;
   change: string | null;
+  percent_change?: string | null;
   previous_close: string | null;
   high: string | null;
   low: string | null;
@@ -28,6 +29,11 @@ export interface TwelveDataSearchResult {
     country: string;
   }>;
   status: string;
+}
+
+export interface TwelveDataTimeSeries {
+  meta?: { symbol?: string; interval?: string; currency?: string };
+  values?: Array<{ datetime: string; open: string; high: string; low: string; close: string; volume?: string }>;
 }
 
 export class TwelveDataClient {
@@ -137,5 +143,9 @@ export class TwelveDataClient {
       symbol: query,
       outputsize: '10'
     });
+  }
+
+  async getTimeSeries(symbol: string, interval: string, outputsize: number): Promise<TwelveDataTimeSeries> {
+    return this.fetch<TwelveDataTimeSeries>('/time_series', { symbol, interval, outputsize: String(outputsize), order: 'ASC' });
   }
 }

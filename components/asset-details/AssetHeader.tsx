@@ -16,6 +16,8 @@ export default function AssetHeader({ asset, onBack }: AssetHeaderProps) {
     stock: 'Stock',
     etf: 'ETF',
     crypto: 'Cryptocurrency',
+    fx: 'Forex',
+    index_proxy: 'Index proxy',
   };
 
   return (

@@ -207,8 +207,8 @@ export class ForexClient {
             changePercent = (change / previousRate) * 100;
           }
 
-          results.set(pair.id, {
-            id: pair.id,
+          results.set(pair.id.replace('_', ''), {
+            id: pair.id.replace('_', ''),
             pair: pair.display,
             base: pair.base,
             quote: pair.quote,

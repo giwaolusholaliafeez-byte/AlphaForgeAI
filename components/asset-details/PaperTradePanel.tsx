@@ -15,14 +15,14 @@ export default function PaperTradePanel({ asset }: { asset: AssetDetail }) {
   const amount = price && Number.isFinite(Number(quantity)) ? price * Number(quantity) : 0;
   const review = async () => {
     if (!price || !Number.isFinite(Number(quantity)) || Number(quantity) <= 0) return;
-    const result = await getPaperOrderPreview({ assetType: asset.type === 'etf' ? 'etf' : asset.type, assetId: asset.id, symbol: asset.symbol, side, quantity: Number(quantity) });
+    const result = await getPaperOrderPreview({ assetType: asset.type, assetId: asset.id, symbol: asset.symbol, side, quantity: Number(quantity) });
     if (!result.success) { setStatus(result.error ?? 'Paper order preview failed.'); setReviewing(false); return; }
     setPreview(result.preview ?? null); setStatus(null); setReviewing(true);
   };
   const execute = async () => {
     if (!price || !Number.isFinite(Number(quantity)) || Number(quantity) <= 0) return;
     setStatus(null);
-    const result = await executePaperOrder({ clientOrderId: crypto.randomUUID(), assetType: asset.type === 'etf' ? 'etf' : asset.type, assetId: asset.id, symbol: asset.symbol, side, quantity: Number(quantity) });
+    const result = await executePaperOrder({ clientOrderId: crypto.randomUUID(), assetType: asset.type, assetId: asset.id, symbol: asset.symbol, side, quantity: Number(quantity) });
     setStatus(result.success ? 'Paper order filled.' : result.error ?? 'Paper order failed.');
     if (result.success) { setQuantity(''); setReviewing(false); setPreview(null); }
   };

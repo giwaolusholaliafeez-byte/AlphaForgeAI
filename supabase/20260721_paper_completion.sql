@@ -1,16 +1,4 @@
 -- Additive paper-account completion migration. Review and run manually in Supabase.
-ALTER TABLE public.paper_accounts ADD COLUMN IF NOT EXISTS is_open BOOLEAN NOT NULL DEFAULT true;
-UPDATE public.paper_accounts SET is_open = false WHERE cash_balance = 0 AND starting_balance = 100000;
-
-CREATE OR REPLACE FUNCTION public.ensure_paper_account()
-RETURNS TRIGGER LANGUAGE plpgsql SECURITY DEFINER SET search_path = '' AS $$
-BEGIN
-  INSERT INTO public.paper_accounts (user_id, starting_balance, cash_balance, is_open) VALUES (NEW.id, 100000, 0, false) ON CONFLICT (user_id) DO NOTHING;
-  INSERT INTO public.subscriptions (user_id, provider, plan, status) VALUES (NEW.id, 'paystack', 'free', 'inactive') ON CONFLICT (user_id) DO NOTHING;
-  RETURN NEW;
-END; $$;
-REVOKE EXECUTE ON FUNCTION public.ensure_paper_account() FROM PUBLIC, anon, authenticated;
-
 ALTER TABLE public.paper_orders ADD COLUMN IF NOT EXISTS realized_pnl NUMERIC(20,8) NOT NULL DEFAULT 0;
 ALTER TABLE public.paper_transactions ADD COLUMN IF NOT EXISTS realized_pnl NUMERIC(20,8) NOT NULL DEFAULT 0;
 
@@ -33,21 +21,6 @@ CREATE POLICY paper_equity_snapshots_owner_select ON public.paper_equity_snapsho
 REVOKE INSERT, UPDATE, DELETE ON public.paper_equity_snapshots FROM authenticated;
 GRANT SELECT ON public.paper_equity_snapshots TO authenticated;
 
-CREATE OR REPLACE FUNCTION public.open_paper_account()
-RETURNS JSONB LANGUAGE plpgsql SECURITY DEFINER SET search_path = '' AS $$
-DECLARE account_row public.paper_accounts;
-BEGIN
-  IF auth.uid() IS NULL THEN RAISE EXCEPTION 'Unauthorized'; END IF;
-  SELECT * INTO account_row FROM public.paper_accounts WHERE user_id = auth.uid() FOR UPDATE;
-  IF NOT FOUND THEN RAISE EXCEPTION 'Paper account not found'; END IF;
-  IF account_row.is_open THEN RETURN jsonb_build_object('opened', true, 'duplicate', true); END IF;
-  UPDATE public.paper_accounts SET is_open = true, cash_balance = starting_balance, updated_at = now() WHERE id = account_row.id;
-  INSERT INTO public.paper_equity_snapshots (user_id, paper_account_id, equity, cash_balance, invested_value, unrealized_pnl, realized_pnl, reason) VALUES (auth.uid(), account_row.id, account_row.starting_balance, account_row.starting_balance, 0, 0, 0, 'reset');
-  RETURN jsonb_build_object('opened', true, 'cash_balance', account_row.starting_balance);
-END; $$;
-REVOKE EXECUTE ON FUNCTION public.open_paper_account() FROM PUBLIC, anon;
-GRANT EXECUTE ON FUNCTION public.open_paper_account() TO authenticated;
-
 CREATE OR REPLACE FUNCTION public.execute_paper_market_order(
   p_client_order_id TEXT, p_asset_type TEXT, p_asset_id TEXT,
   p_symbol TEXT, p_side TEXT, p_quantity NUMERIC, p_execution_price NUMERIC
@@ -69,7 +42,6 @@ BEGIN
   IF p_client_order_id IS NULL OR p_asset_type NOT IN ('stock','etf','crypto') OR p_asset_id IS NULL OR p_symbol IS NULL OR p_side NOT IN ('buy','sell') OR p_quantity IS NULL OR p_execution_price IS NULL OR p_quantity <= 0 OR p_execution_price <= 0 OR p_quantity != p_quantity OR p_execution_price != p_execution_price THEN RAISE EXCEPTION 'Invalid paper order'; END IF;
   SELECT * INTO account FROM public.paper_accounts WHERE user_id = v_user_id FOR UPDATE;
   IF NOT FOUND THEN RAISE EXCEPTION 'Paper account not found'; END IF;
-  IF NOT account.is_open THEN RAISE EXCEPTION 'Paper account is not open'; END IF;
   SELECT * INTO order_row FROM public.paper_orders WHERE user_id = v_user_id AND client_order_id = p_client_order_id;
   IF FOUND THEN RETURN jsonb_build_object('order_id', order_row.id, 'status', order_row.status, 'duplicate', true); END IF;
   gross := round(p_quantity * p_execution_price, 8);
@@ -113,7 +85,7 @@ BEGIN
   DELETE FROM public.paper_positions WHERE paper_account_id = account_row.id;
   DELETE FROM public.paper_orders WHERE paper_account_id = account_row.id;
   DELETE FROM public.paper_transactions WHERE paper_account_id = account_row.id;
-  UPDATE public.paper_accounts SET is_open = true, cash_balance = starting_balance, updated_at = now() WHERE id = account_row.id;
+  UPDATE public.paper_accounts SET cash_balance = starting_balance, updated_at = now() WHERE id = account_row.id;
   INSERT INTO public.paper_transactions (user_id, paper_account_id, transaction_type, amount, cash_balance_after, realized_pnl) VALUES (auth.uid(), account_row.id, 'reset', account_row.starting_balance, account_row.starting_balance, 0);
   INSERT INTO public.paper_equity_snapshots (user_id, paper_account_id, equity, cash_balance, invested_value, unrealized_pnl, realized_pnl, reason) VALUES (auth.uid(), account_row.id, account_row.starting_balance, account_row.starting_balance, 0, 0, 0, 'reset');
 END; $$;

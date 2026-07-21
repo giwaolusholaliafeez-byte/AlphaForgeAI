@@ -9,6 +9,9 @@ import {
 import { FinnhubClient } from './finnhub';
 import { CoinGeckoClient } from './coingecko';
 import { validateStockSymbol, validateCryptoId } from './asset-validation';
+import { ForexClient } from './forex';
+import { normalizeAssetIdentity } from './identity';
+import { TwelveDataClient } from './twelve-data';
 
 export async function getStockDetail(symbol: string): Promise<AssetDetailResponse> {
   const apiKey = process.env.FINNHUB_API_KEY;
@@ -203,6 +206,16 @@ export async function getAssetDetail(type: string, id: string): Promise<AssetDet
     return getStockDetail(id);
   } else if (type === 'crypto') {
     return getCryptoDetail(id);
+  } else if (type === 'fx') {
+    try {
+      const identity = normalizeAssetIdentity({ assetType: 'fx', assetId: id });
+      const pair = identity.displaySymbol;
+      const twelveKey = process.env.TWELVE_DATA_API_KEY;
+      const twelveQuote = twelveKey ? await new TwelveDataClient(twelveKey).getQuote(pair).catch(() => null) : null;
+      const quote = twelveQuote?.price && Number.isFinite(Number(twelveQuote.price)) ? { id: identity.assetId, pair, base: pair.slice(0, 3), quote: pair.slice(4), price: Number(twelveQuote.price), change: twelveQuote.change ? Number(twelveQuote.change) : null, changePercent: twelveQuote.percent_change ? Number(twelveQuote.percent_change) : null, previousClose: twelveQuote.previous_close ? Number(twelveQuote.previous_close) : null, currency: pair.slice(4), source: 'twelvedata', lastUpdated: twelveQuote.timestamp ? new Date(twelveQuote.timestamp * 1000).toISOString() : new Date().toISOString(), exchange: twelveQuote.exchange ?? 'Forex' } : (await new ForexClient().getRates()).get(identity.assetId);
+      if (!quote) return { data: null, error: `No data available for ${id}`, source: 'frankfurter', lastUpdated: null, isDelayed: true, isConfigured: true };
+      return { data: { id: identity.assetId, symbol: quote.pair, name: quote.pair, type: 'fx', price: quote.price, change: quote.change, changePercent: quote.changePercent, currency: quote.currency, marketCap: null, volume: null, logo: null, exchange: quote.exchange, lastUpdated: quote.lastUpdated, source: quote.source, description: null, website: null, industry: 'Foreign exchange', country: null }, error: null, source: quote.source, lastUpdated: quote.lastUpdated, isDelayed: true, isConfigured: true };
+    } catch (error) { return { data: null, error: error instanceof Error ? error.message : 'Failed to fetch forex data', source: 'frankfurter', lastUpdated: null, isDelayed: true, isConfigured: true }; }
   }
   
   return {

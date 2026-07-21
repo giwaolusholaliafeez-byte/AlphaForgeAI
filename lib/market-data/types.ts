@@ -1,4 +1,13 @@
-export type AssetType = 'stock' | 'etf' | 'crypto';
+export type AssetType = 'stock' | 'etf' | 'crypto' | 'fx' | 'index_proxy';
+
+export interface AssetIdentity {
+  assetType: AssetType;
+  assetId: string;
+  symbol: string;
+  displaySymbol: string;
+  name: string;
+  providerIdentifiers: Record<string, string>;
+}
 
 export interface MarketQuote {
   price: number;
@@ -24,6 +33,15 @@ export interface MarketAsset {
   lastUpdated: string | null;
   source: string;
   rank?: number | null;
+}
+
+export interface AssetCandle {
+  timestamp: number;
+  open: number;
+  high: number;
+  low: number;
+  close: number;
+  volume?: number | null;
 }
 
 export interface StockAsset extends MarketAsset {
@@ -180,6 +198,7 @@ export interface AssetHistoricalPoint {
 
 export interface AssetHistoricalSeries {
   points: AssetHistoricalPoint[];
+  candles?: AssetCandle[];
   range: string;
   source: string;
   lastUpdated: string;
@@ -203,6 +222,7 @@ export interface AssetNewsItem {
   datetime: string;
   image?: string | null;
   category?: string;
+  relatedAsset?: string | null;
 }
 
 export interface AssetDetailResponse {

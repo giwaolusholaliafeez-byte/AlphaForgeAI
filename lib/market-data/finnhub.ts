@@ -82,6 +82,11 @@ export class FinnhubClient {
     return items.filter((item) => item.headline && item.url && item.datetime).map((item) => ({ id: String(item.id ?? `${symbol}-${item.datetime}`), headline: item.headline as string, summary: item.summary, source: item.source ?? "Finnhub", url: item.url as string, datetime: new Date((item.datetime as number) * 1000).toISOString(), image: item.image, category: item.category }));
   }
 
+  async getMarketNews(category = 'general'): Promise<AssetNewsItem[]> {
+    const items = await this.fetch<Array<{ id?: number; headline?: string; summary?: string; source?: string; url?: string; datetime?: number; image?: string; category?: string; related?: string }>>('/news', { category });
+    return items.filter((item) => item.headline && item.url && item.datetime).map((item) => ({ id: String(item.id ?? `${item.headline}-${item.datetime}`), headline: item.headline as string, summary: item.summary, source: item.source ?? 'Finnhub', url: item.url as string, datetime: new Date((item.datetime as number) * 1000).toISOString(), image: item.image, category: item.category ?? category, relatedAsset: item.related ?? null }));
+  }
+
   async getMultipleQuotes(symbols: string[]): Promise<Map<string, FinnhubQuote>> {
     const results = new Map<string, FinnhubQuote>();
 

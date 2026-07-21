@@ -2,6 +2,9 @@ import { PortfolioHolding } from '@/types/portfolio';
 import { toFiniteNumber } from './normalizers';
 import { FinnhubClient } from '@/lib/market-data/finnhub';
 import { CoinGeckoClient } from '@/lib/market-data/coingecko';
+import { TwelveDataClient } from '@/lib/market-data/twelve-data';
+import { ForexClient } from '@/lib/market-data/forex';
+import { normalizeAssetIdentity } from '@/lib/market-data/identity';
 
 // Cache for prices to avoid repeated API calls
 const priceCache = new Map<string, { price: number; timestamp: number }>();
@@ -85,6 +88,8 @@ async function fetchSinglePrice(holding: PortfolioHolding): Promise<number | nul
         return await fetchStockPrice(holding.symbol);
       case 'crypto':
         return await fetchCryptoPrice(holding.assetId);
+      case 'fx':
+        return await fetchForexPrice(holding.assetId, holding.symbol);
       default:
         return null;
     }
@@ -92,6 +97,12 @@ async function fetchSinglePrice(holding: PortfolioHolding): Promise<number | nul
     console.error(`Error fetching price for ${holding.symbol}:`, error);
     return null;
   }
+}
+
+async function fetchForexPrice(assetId: string, symbol: string): Promise<number | null> {
+  const identity = normalizeAssetIdentity({ assetType: 'fx', assetId, symbol }); const key = process.env.TWELVE_DATA_API_KEY;
+  if (key) { const quote = await withTimeout(new TwelveDataClient(key).getQuote(identity.displaySymbol), 12_000).catch(() => null); const price = toFiniteNumber(quote?.price, 0); if (price > 0) return price; }
+  const fallback = await withTimeout(new ForexClient().getRates(), 12_000).catch(() => new Map()); return toFiniteNumber(fallback.get(identity.assetId)?.price, 0) || null;
 }
 
 async function fetchStockPrice(symbol: string): Promise<number | null> {

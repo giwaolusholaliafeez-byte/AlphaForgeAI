@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { getAssetDetail } from '@/lib/market-data/asset-details';
-import { validateAssetType, validateStockSymbol, validateCryptoId } from '@/lib/market-data/asset-validation';
+import { validateAssetType, validateStockSymbol, validateCryptoId, validateForexPair } from '@/lib/market-data/asset-validation';
 
 type AssetRouteParams = {
   assetType: string;
@@ -36,6 +36,8 @@ export async function GET(
         { status: 400 }
       );
     }
+  } else if (assetType === 'fx' && !validateForexPair(assetId)) {
+    return NextResponse.json({ error: 'Invalid forex pair', code: 'INVALID_PAIR' }, { status: 400 });
   }
 
   const result = await getAssetDetail(assetType, assetId);

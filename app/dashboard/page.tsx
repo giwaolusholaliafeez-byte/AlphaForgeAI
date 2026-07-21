@@ -15,6 +15,7 @@ import NewsPreview from "@/components/dashboard/overview/NewsPreview";
 import FirstActionCard from "@/components/dashboard/FirstActionCard";
 import type { UserType } from "@/lib/accounts/types";
 import { getLiveDashboardMarketData } from "@/lib/dashboard/live-market";
+import { getCurrentNews } from "@/lib/market-data/news";
 
 export default async function DashboardPage() {
   const supabase = await createClient();
@@ -27,6 +28,7 @@ export default async function DashboardPage() {
   const isDemo = isDemoAccount(user.email);
   const generatedAt = new Date().toISOString();
   const liveMarket = await getLiveDashboardMarketData();
+  const currentNews = await getCurrentNews('latest');
   const { data: profile } = await supabase.from("profiles").select("user_type").eq("user_id", user.id).maybeSingle();
   const userType: UserType = profile?.user_type === "trader" || profile?.user_type === "exploring" ? profile.user_type : "investor";
 
@@ -129,7 +131,7 @@ export default async function DashboardPage() {
       {/* Watchlist and News */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         <WatchlistPreview items={[]} count={0} />
-        <NewsPreview items={[]} />
+        <NewsPreview items={currentNews.slice(0, 4).map((item) => ({ id: item.id, title: item.headline, source: item.source, time: new Date(item.datetime).toLocaleString(), href: item.url }))} />
       </div>
     </div>
   );
