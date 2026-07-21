@@ -4,6 +4,7 @@ import { getCurrentPrices } from "@/lib/portfolio/prices";
 import { calculateAllocation } from "@/lib/portfolio/valuation";
 import type { PortfolioHolding } from "@/types/portfolio";
 import ResetPaperAccountButton from "@/components/paper/ResetPaperAccountButton";
+import OpenPaperAccountButton from "@/components/paper/OpenPaperAccountButton";
 import PaperPerformanceChart from "@/components/paper/PaperPerformanceChart";
 
 export default async function PaperPage() {
@@ -11,11 +12,12 @@ export default async function PaperPage() {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) redirect("/sign-in");
   const [{ data: account }, { data: positions }, { data: orders }, { data: snapshots }] = await Promise.all([
-    supabase.from("paper_accounts").select("cash_balance,starting_balance").eq("user_id", user.id).maybeSingle(),
+    supabase.from("paper_accounts").select("cash_balance,starting_balance,is_open").eq("user_id", user.id).maybeSingle(),
     supabase.from("paper_positions").select("id,asset_type,asset_id,symbol,quantity,average_cost,realized_pnl").eq("user_id", user.id).order("symbol"),
     supabase.from("paper_orders").select("id,symbol,side,quantity,execution_price,gross_amount,realized_pnl,status,created_at").eq("user_id", user.id).order("created_at", { ascending: false }).limit(100),
     supabase.from("paper_equity_snapshots").select("equity,recorded_at").eq("user_id", user.id).order("recorded_at", { ascending: true }).limit(100),
   ]);
+  if (!account?.is_open) return <div className="mx-auto max-w-2xl space-y-5 py-12"><p className="text-xs uppercase tracking-wider text-[#00C2A8]">Paper · Virtual · Simulated</p><h1 className="text-3xl font-semibold text-white">Open your simulated trading account</h1><p className="text-sm leading-6 text-[#A1A7B3]">Your paper account has not been opened yet. Opening it creates one permanent virtual account with no real money or securities.</p><section className="rounded-xl border border-[#2563EB]/30 bg-[#2563EB]/10 p-5"><div className="grid gap-4 sm:grid-cols-4"><Value label="Starting balance" value="$100,000.00" /><Value label="Cash" value="$100,000.00" /><Value label="Equity" value="$100,000.00" /><Value label="Positions" value="None" /></div><div className="mt-5"><OpenPaperAccountButton /></div></section></div>;
   const holdings: PortfolioHolding[] = (positions ?? []).map((position) => ({ id: position.id, portfolioId: "paper", userId: user.id, assetType: position.asset_type, assetId: position.asset_id, symbol: position.symbol, assetName: position.symbol, quantity: Number(position.quantity), averageCost: Number(position.average_cost), acquiredAt: null, notes: null, createdAt: "", updatedAt: "" }));
   const priceMap = await getCurrentPrices(holdings);
   const valued = holdings.map((holding) => { const currentPrice = priceMap.get(holding.id) ?? null; const marketValue = currentPrice === null ? null : holding.quantity * currentPrice; const costBasis = holding.quantity * holding.averageCost; return { holding, currentPrice, marketValue, costBasis, unrealizedGain: marketValue === null ? null : marketValue - costBasis, returnPercentage: marketValue === null || costBasis === 0 ? null : ((marketValue - costBasis) / costBasis) * 100, allocationPercentage: 0 }; });

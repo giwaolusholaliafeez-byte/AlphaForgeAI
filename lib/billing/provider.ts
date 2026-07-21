@@ -1,6 +1,7 @@
 import type { SubscriptionPlan } from './types';
 
-export interface CheckoutRequest { email: string; plan: SubscriptionPlan; callbackUrl: string; }
+export type BillingInterval = 'monthly' | 'annual';
+export interface CheckoutRequest { email: string; plan: SubscriptionPlan; interval: BillingInterval; callbackUrl: string; }
 export interface CheckoutResponse { authorizationUrl: string; reference: string; }
 
 export interface BillingProvider {

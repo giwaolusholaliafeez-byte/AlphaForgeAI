@@ -10,7 +10,7 @@ function secretKey(): string {
 
 export class PaystackProvider implements BillingProvider {
   async initializeCheckout(request: CheckoutRequest): Promise<CheckoutResponse> {
-    const planCode = request.plan === 'pro' ? process.env.PAYSTACK_PRO_MONTHLY_PLAN_CODE : undefined;
+    const planCode = request.plan === 'pro' ? request.interval === 'annual' ? process.env.PAYSTACK_PRO_ANNUAL_PLAN_CODE : process.env.PAYSTACK_PRO_MONTHLY_PLAN_CODE : undefined;
     if (!planCode) throw new Error('Paystack Pro plan is not configured');
     const response = await fetch(`${PAYSTACK_URL}/transaction/initialize`, { method: 'POST', headers: { Authorization: `Bearer ${secretKey()}`, 'Content-Type': 'application/json' }, body: JSON.stringify({ email: request.email, plan: planCode, callback_url: request.callbackUrl }) });
     const payload: unknown = await response.json();

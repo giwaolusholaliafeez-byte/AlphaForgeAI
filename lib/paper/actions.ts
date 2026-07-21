@@ -44,6 +44,16 @@ export async function executePaperOrder(input: unknown): Promise<{ success: bool
   return { success: true };
 }
 
+export async function openPaperAccount(): Promise<{ success: boolean; error?: string }> {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return { success: false, error: 'Unauthorized' };
+  const { error } = await supabase.rpc('open_paper_account');
+  if (error) return { success: false, error: 'Paper account could not be opened.' };
+  revalidatePath('/dashboard/paper'); revalidatePath('/dashboard/accounts'); revalidatePath('/dashboard');
+  return { success: true };
+}
+
 export async function resetPaperAccount(): Promise<{ success: boolean; error?: string }> {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
