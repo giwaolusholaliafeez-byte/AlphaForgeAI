@@ -1,4 +1,4 @@
-import { FinnhubQuote, FinnhubSearchResult, FinnhubProfile, StockAsset, MarketDataError } from "./types";
+import { FinnhubQuote, FinnhubSearchResult, FinnhubProfile, StockAsset, MarketDataError, AssetNewsItem } from "./types";
 
 const FINNHUB_BASE_URL = "https://finnhub.io/api/v1";
 
@@ -75,6 +75,11 @@ export class FinnhubClient {
 
   async getProfile(symbol: string): Promise<FinnhubProfile> {
     return this.fetch<FinnhubProfile>("/stock/profile2", { symbol });
+  }
+
+  async getCompanyNews(symbol: string, from: string, to: string): Promise<AssetNewsItem[]> {
+    const items = await this.fetch<Array<{ id?: number; headline?: string; summary?: string; source?: string; url?: string; datetime?: number; image?: string; category?: string }>>("/company-news", { symbol, from, to });
+    return items.filter((item) => item.headline && item.url && item.datetime).map((item) => ({ id: String(item.id ?? `${symbol}-${item.datetime}`), headline: item.headline as string, summary: item.summary, source: item.source ?? "Finnhub", url: item.url as string, datetime: new Date((item.datetime as number) * 1000).toISOString(), image: item.image, category: item.category }));
   }
 
   async getMultipleQuotes(symbols: string[]): Promise<Map<string, FinnhubQuote>> {

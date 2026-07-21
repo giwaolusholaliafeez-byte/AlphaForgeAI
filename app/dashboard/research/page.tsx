@@ -1,261 +1,53 @@
 "use client";
 
-import { useState } from "react";
-import { useRouter } from "next/navigation";
-import { 
-  Search, 
-  Sparkles, 
-  Brain, 
-  Clock, 
-  ChevronRight,
-  FileText,
-  TrendingUp,
-  AlertTriangle,
-  CheckCircle,
-  ArrowRight
-} from "lucide-react";
+import { useEffect, useState } from "react";
+import { Brain, ChevronRight, ExternalLink, Search, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
-import { cn } from "@/lib/utils";
 
-// Mock data - will be replaced with real research data in later phases
-const mockResearchHistory = [
-  {
-    id: "1",
-    title: "NVIDIA Market Analysis",
-    asset: "NVDA",
-    date: new Date().toISOString(),
-    type: "Company Overview",
-  },
-  {
-    id: "2",
-    title: "Bitcoin Volatility Report",
-    asset: "BTC",
-    date: new Date().toISOString(),
-    type: "Risk Analysis",
-  },
-];
-
-interface ResearchResult {
-  id: string;
-  title: string;
-  summary: string;
-  sections: Array<{ title: string; content: string }>;
-  sources: string[];
-  confidence: number;
-  generatedAt: string;
-}
+type SearchResult = { id: string; symbol: string; name: string; type: "stock" | "etf" | "crypto" };
+type Source = { name: string; url: string | null; publishedAt: string | null; detail: string };
+type Report = { title: string; summary: string; sections: Array<{ title: string; content: string }>; sources: Source[]; asOf: string; assetType: string; symbol: string; assetId: string };
 
 export default function ResearchPage() {
-  const router = useRouter();
   const [query, setQuery] = useState("");
-  const [isLoading, setIsLoading] = useState(false);
-  const [result, setResult] = useState<ResearchResult | null>(null);
-  const [showHistory, setShowHistory] = useState(true);
+  const [asset, setAsset] = useState<SearchResult | null>(null);
+  const [results, setResults] = useState<SearchResult[]>([]);
+  const [report, setReport] = useState<Report | null>(null);
+  const [history, setHistory] = useState<Array<{ id: string; title: string; symbol: string; summary: string; report_json: Report }>>([]);
+  const [question, setQuestion] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
-  const handleResearch = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!query.trim()) return;
+  useEffect(() => { fetch("/api/research").then((response) => response.ok ? response.json() : { reports: [] }).then((data) => setHistory(data.reports ?? [])).catch(() => setHistory([])); }, []);
+  useEffect(() => {
+    if (asset || query.trim().length < 2) { setResults([]); return; }
+    const timer = window.setTimeout(() => fetch(`/api/markets/search?q=${encodeURIComponent(query)}`).then((response) => response.json()).then((data) => setResults(data.results ?? [])).catch(() => setResults([])), 250);
+    return () => window.clearTimeout(timer);
+  }, [query, asset]);
 
-    setIsLoading(true);
-    // Simulate research generation
-    await new Promise(resolve => setTimeout(resolve, 2000));
-    
-    setResult({
-      id: Date.now().toString(),
-      title: `Research: ${query}`,
-      summary: "Analysis based on available market data and AI interpretation.",
-      sections: [
-        {
-          title: "Executive Summary",
-          content: "This is a simulated research summary. AI Research Copilot will be connected in a future phase with real market data integration."
-        },
-        {
-          title: "Market Context",
-          content: "Market data integration will provide real-time context and analysis."
-        },
-        {
-          title: "Key Considerations",
-          content: "Research capabilities will include financial analysis, risk assessment, and portfolio insights."
-        }
-      ],
-      sources: ["Market Data Provider", "Historical Analysis"],
-      confidence: 78,
-      generatedAt: new Date().toISOString(),
-    });
-    
-    setIsLoading(false);
-    setShowHistory(false);
-  };
+  async function generate(followUp?: string) {
+    if (!asset) return;
+    setLoading(true); setError(null);
+    try {
+      const response = await fetch("/api/research", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ assetType: asset.type, assetId: asset.id, question: followUp || undefined }) });
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.error ?? "AI research is temporarily unavailable.");
+      setReport(data.report);
+    } catch (caught) { setError(caught instanceof Error ? caught.message : "AI research is temporarily unavailable."); } finally { setLoading(false); }
+  }
 
-  const handleNewResearch = () => {
-    setResult(null);
-    setQuery("");
-    setShowHistory(true);
-  };
+  async function saveReport() {
+    if (!report) return;
+    const response = await fetch("/api/research", { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ report }) });
+    if (response.ok) setError("Research saved to your private history."); else setError((await response.json()).error ?? "Research could not be saved.");
+  }
 
-  return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-        <div>
-          <div className="flex items-center gap-3">
-            <h1 className="text-xl font-semibold text-white">AI Research</h1>
-            <Badge className="bg-[#00C2A8]/10 text-[#00C2A8] border-[#00C2A8]/20">
-              <Sparkles className="h-3 w-3 mr-1" />
-              Preview
-            </Badge>
-          </div>
-          <p className="text-sm text-[#A1A7B3]">Research assets with AlphaForge AI intelligence</p>
-        </div>
-        {result && (
-          <Button onClick={handleNewResearch} className="bg-[#2563EB] hover:bg-[#2563EB]/90 text-white">
-            <Brain className="h-4 w-4 mr-2" />
-            New Research
-          </Button>
-        )}
-      </div>
-
-      {/* Research Input */}
-      {!result && (
-        <div className="bg-[#1E293B] rounded-lg border border-[#1E293B] p-5">
-          <form onSubmit={handleResearch} className="space-y-4">
-            <div className="space-y-1.5">
-              <Label htmlFor="research-query" className="text-white text-sm">
-                What would you like to research?
-              </Label>
-              <div className="relative">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-[#A1A7B3]" />
-                <Input
-                  id="research-query"
-                  type="text"
-                  placeholder="E.g., Compare NVIDIA and AMD, Bitcoin market analysis"
-                  value={query}
-                  onChange={(e) => setQuery(e.target.value)}
-                  className="pl-9 bg-[#0B0F1A] border-[#0B0F1A] text-white placeholder:text-[#A1A7B3] focus:border-[#2563EB] focus:ring-[#2563EB]"
-                  disabled={isLoading}
-                />
-              </div>
-            </div>
-            <Button
-              type="submit"
-              disabled={isLoading || !query.trim()}
-              className="bg-[#2563EB] hover:bg-[#2563EB]/90 text-white"
-            >
-              {isLoading ? (
-                <>
-                  <Sparkles className="h-4 w-4 mr-2 animate-pulse" />
-                  Generating Research...
-                </>
-              ) : (
-                <>
-                  <Brain className="h-4 w-4 mr-2" />
-                  Research Asset
-                </>
-              )}
-            </Button>
-          </form>
-
-          <div className="mt-4 p-3 rounded-lg bg-[#F4B000]/5 border border-[#F4B000]/10">
-            <p className="text-xs text-[#A1A7B3]">
-              ⚠️ AI Research is currently in preview mode. Real-time market analysis and advanced research capabilities will be connected in a future phase.
-            </p>
-          </div>
-        </div>
-      )}
-
-      {/* Research Result */}
-      {result && (
-        <div className="bg-[#1E293B] rounded-lg border border-[#00C2A8]/10 p-5 space-y-4">
-          <div className="flex items-start justify-between">
-            <div>
-              <h3 className="text-lg font-semibold text-white">{result.title}</h3>
-              <div className="flex items-center gap-3 mt-1">
-                <span className="text-xs text-[#A1A7B3]">Generated: {new Date(result.generatedAt).toLocaleString()}</span>
-                <Badge className="bg-[#2563EB]/10 text-[#2563EB] border-[#2563EB]/20">
-                  Confidence: {result.confidence}%
-                </Badge>
-              </div>
-            </div>
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={handleNewResearch}
-              className="text-[#A1A7B3] hover:text-white"
-            >
-              New <ChevronRight className="h-4 w-4 ml-1" />
-            </Button>
-          </div>
-
-          <div className="space-y-4">
-            <div className="p-4 rounded-lg bg-[#0B0F1A] border border-white/[0.06]">
-              <p className="text-sm text-[#A1A7B3]">{result.summary}</p>
-            </div>
-
-            {result.sections.map((section, index) => (
-              <div key={index} className="space-y-1">
-                <h4 className="text-sm font-medium text-white">{section.title}</h4>
-                <p className="text-sm text-[#A1A7B3]">{section.content}</p>
-              </div>
-            ))}
-
-            <div>
-              <h4 className="text-sm font-medium text-white mb-2">Sources</h4>
-              <div className="flex flex-wrap gap-2">
-                {result.sources.map((source, index) => (
-                  <Badge key={index} variant="outline" className="text-[#A1A7B3] border-white/[0.06]">
-                    {source}
-                  </Badge>
-                ))}
-              </div>
-            </div>
-          </div>
-
-          <div className="flex items-center gap-3 pt-4 border-t border-white/[0.06]">
-            <Button className="bg-[#00C2A8] hover:bg-[#00C2A8]/90 text-white text-sm">
-              Save Research
-            </Button>
-            <Button variant="outline" className="border-[#1E293B] text-white hover:bg-[#1E293B] text-sm">
-              Export
-            </Button>
-          </div>
-
-          <p className="text-[10px] text-[#A1A7B3] text-center">
-            ⚠️ Research information is for educational purposes only and not financial advice.
-          </p>
-        </div>
-      )}
-
-      {/* Research History */}
-      {showHistory && !result && mockResearchHistory.length > 0 && (
-        <div className="bg-[#1E293B] rounded-lg border border-[#1E293B] p-5">
-          <h3 className="text-sm font-medium text-white mb-4">Recent Research</h3>
-          <div className="divide-y divide-white/[0.04]">
-            {mockResearchHistory.map((item) => (
-              <div
-                key={item.id}
-                className="flex items-center justify-between py-3 hover:bg-white/[0.02] transition-colors px-2 -mx-2 rounded"
-              >
-                <div>
-                  <p className="text-sm font-medium text-white">{item.title}</p>
-                  <div className="flex items-center gap-2 mt-0.5">
-                    <span className="text-xs text-[#A1A7B3]">{item.asset}</span>
-                    <span className="text-xs text-[#A1A7B3]">•</span>
-                    <span className="text-xs text-[#A1A7B3]">{item.type}</span>
-                    <span className="text-xs text-[#A1A7B3]">•</span>
-                    <span className="text-xs text-[#A1A7B3]">{new Date(item.date).toLocaleDateString()}</span>
-                  </div>
-                </div>
-                <Button variant="ghost" size="sm" className="text-[#A1A7B3] hover:text-white">
-                  Open <ChevronRight className="h-4 w-4 ml-1" />
-                </Button>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
-    </div>
-  );
+  return <div className="space-y-6">
+    <header><div className="flex items-center gap-3"><h1 className="text-2xl font-semibold text-white">AI Research</h1><Badge className="border-[#00C2A8]/20 bg-[#00C2A8]/10 text-[#00C2A8]"><Sparkles className="mr-1 h-3 w-3" />Evidence-based</Badge></div><p className="mt-1 text-sm text-[#A1A7B3]">Select a stock, ETF, or crypto asset for a sourced research brief. Missing provider data stays unavailable.</p></header>
+    {!report && <section className="rounded-xl border border-white/[0.06] bg-white/[0.02] p-5"><label htmlFor="research-asset" className="text-sm font-medium text-white">Asset</label><div className="relative mt-2"><Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[#64748B]" /><input id="research-asset" value={asset ? `${asset.symbol} · ${asset.name}` : query} onChange={(event) => { setAsset(null); setQuery(event.target.value); }} placeholder="Search NVDA, SPY, Bitcoin..." className="h-11 w-full rounded-lg border border-white/[0.08] bg-[#0B0F1A] pl-10 pr-3 text-sm text-white outline-none focus:border-[#2563EB]" /></div>{results.length > 0 && <div className="mt-2 overflow-hidden rounded-lg border border-white/[0.08] bg-[#0B0F1A]">{results.map((item) => <button key={`${item.type}-${item.id}`} type="button" onClick={() => { setAsset(item); setQuery(""); }} className="flex w-full items-center justify-between px-3 py-3 text-left hover:bg-white/[0.04]"><span><span className="font-medium text-white">{item.symbol}</span><span className="ml-3 text-sm text-[#A1A7B3]">{item.name}</span></span><span className="text-[10px] uppercase tracking-wider text-[#64748B]">{item.type}</span></button>)}</div>}<Button type="button" className="mt-4" disabled={!asset || loading} onClick={() => generate()}><Brain className="mr-2 h-4 w-4" />{loading ? "Building brief..." : "Generate research brief"}</Button></section>}
+    {error && <div className="rounded-lg border border-[#F4B000]/20 bg-[#F4B000]/5 p-3 text-sm text-[#F4B000]">{error}</div>}
+    {report && <section className="space-y-5 rounded-xl border border-[#00C2A8]/20 bg-[#00C2A8]/5 p-5"><div className="flex flex-col justify-between gap-3 sm:flex-row sm:items-start"><div><p className="text-xs uppercase tracking-wider text-[#00C2A8]">{report.assetType} research brief</p><h2 className="mt-1 text-xl font-semibold text-white">{report.title}</h2><p className="mt-1 text-xs text-[#A1A7B3]">As of {new Date(report.asOf).toLocaleString()} · {report.symbol}</p></div><Button variant="outline" onClick={() => { setReport(null); setAsset(null); setError(null); }} className="border-white/[0.1] text-white">New research</Button></div><div className="rounded-lg bg-[#0B0F1A] p-4 text-sm leading-6 text-[#CBD5E1]">{report.summary}</div><div className="grid gap-4 md:grid-cols-2">{report.sections.map((section) => <article key={section.title} className="rounded-lg border border-white/[0.06] bg-[#0B0F1A] p-4"><h3 className="font-medium text-white">{section.title}</h3><p className="mt-2 whitespace-pre-wrap text-sm leading-6 text-[#A1A7B3]">{section.content}</p></article>)}</div><div><h3 className="font-medium text-white">Sources and freshness</h3><div className="mt-2 space-y-2">{report.sources.map((source) => <div key={`${source.name}-${source.publishedAt}`} className="flex flex-wrap items-center gap-2 text-sm text-[#A1A7B3]"><span>{source.detail}</span>{source.publishedAt && <span>· {new Date(source.publishedAt).toLocaleString()}</span>}{source.url && <a href={source.url} target="_blank" rel="noreferrer" className="inline-flex items-center text-[#60A5FA] hover:underline">Open source <ExternalLink className="ml-1 h-3 w-3" /></a>}</div>)}</div></div><div className="flex flex-wrap gap-2 border-t border-white/[0.06] pt-4"><Button onClick={saveReport} className="bg-[#00C2A8] text-[#0B0F1A] hover:bg-[#00C2A8]/90">Save to research history</Button><form onSubmit={(event) => { event.preventDefault(); const value = question.trim(); if (value) { setQuestion(""); generate(value); } }} className="flex min-w-[260px] flex-1 gap-2"><input value={question} onChange={(event) => setQuestion(event.target.value)} placeholder="Ask a follow-up about this asset..." className="min-w-0 flex-1 rounded-lg border border-white/[0.08] bg-[#0B0F1A] px-3 text-sm text-white outline-none" /><Button type="submit" variant="outline" disabled={loading || !question.trim()}><ChevronRight className="h-4 w-4" /></Button></form></div><p className="text-center text-[11px] text-[#64748B]">Analysis is educational, source-grounded, and not investment advice.</p></section>}
+    {!report && <section className="rounded-xl border border-white/[0.06] bg-white/[0.02] p-5"><h2 className="font-medium text-white">Private research history</h2>{history.length ? <div className="mt-3 divide-y divide-white/[0.06]">{history.map((item) => <button key={item.id} type="button" onClick={() => { setReport(item.report_json); setAsset({ id: item.report_json.assetId, symbol: item.symbol, name: item.symbol, type: item.report_json.assetType as SearchResult["type"] }); }} className="flex w-full items-center justify-between py-3 text-left hover:bg-white/[0.02]"><span><span className="font-medium text-white">{item.title}</span><span className="ml-2 text-xs text-[#64748B]">{item.symbol}</span></span><ChevronRight className="h-4 w-4 text-[#64748B]" /></button>)}</div> : <p className="mt-3 text-sm text-[#A1A7B3]">No saved reports yet.</p>}</section>}
+  </div>;
 }

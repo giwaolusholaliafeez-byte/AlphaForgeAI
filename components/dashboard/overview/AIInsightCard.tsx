@@ -21,13 +21,13 @@ export default function AIInsightCard({
         <div className="p-3 rounded-full bg-[#00C2A8]/5 border border-[#00C2A8]/10 mb-3">
           <Brain className="h-6 w-6 text-[#00C2A8]" />
         </div>
-        <h3 className="text-sm font-medium text-white mb-1">AI Research Coming Soon</h3>
+        <h3 className="text-sm font-medium text-white mb-1">AI Research</h3>
         <p className="text-xs text-[#A1A7B3] max-w-xs">
-          AlphaForge AI market intelligence will appear here once Research Copilot is connected.
+          Generate a sourced asset brief from the AI Research workspace.
         </p>
         <Link href="/dashboard/research">
           <Button variant="ghost" size="sm" className="mt-3 text-[#00C2A8] hover:text-[#00C2A8]/80 text-xs">
-            Learn More
+            Open Research
             <ChevronRight className="h-3 w-3 ml-1" />
           </Button>
         </Link>

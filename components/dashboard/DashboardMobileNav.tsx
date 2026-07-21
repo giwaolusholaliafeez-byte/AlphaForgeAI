@@ -6,7 +6,7 @@ import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { 
   Menu, X, LayoutDashboard, BarChart3, Wallet, Bookmark, 
-  Brain, Newspaper, Bell, Landmark, Activity, Settings, LogOut 
+  Brain, Sparkles, Newspaper, Bell, Landmark, Activity, Settings, LogOut
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { signOut } from "@/app/auth/actions";
@@ -16,6 +16,7 @@ const navigationItems = [
   { label: "Overview", icon: LayoutDashboard, href: "/dashboard" },
   { label: "Markets", icon: BarChart3, href: "/dashboard/markets" },
   { label: "Portfolio", icon: Wallet, href: "/dashboard/portfolio" },
+  { label: "Intelligence", icon: Sparkles, href: "/dashboard/intelligence" },
   { label: "Watchlist", icon: Bookmark, href: "/dashboard/watchlist" },
   { label: "AI Research", icon: Brain, href: "/dashboard/research" },
   { label: "News Intelligence", icon: Newspaper, href: "/dashboard/news" },

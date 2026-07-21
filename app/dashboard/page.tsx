@@ -16,7 +16,6 @@ import FirstActionCard from "@/components/dashboard/FirstActionCard";
 import type { UserType } from "@/lib/accounts/types";
 import { getLiveDashboardMarketData } from "@/lib/dashboard/live-market";
 
-// Mock data - will be replaced with real data in later phases
 export default async function DashboardPage() {
   const supabase = await createClient();
   const { data: { user }, error } = await supabase.auth.getUser();

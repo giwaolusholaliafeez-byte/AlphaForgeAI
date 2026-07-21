@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { BookmarkPlus, Search, Bell, X } from "lucide-react";
 import Image from "next/image";
+import Link from "next/link";
 
 interface AssetDetailDrawerProps {
   asset: MarketAsset | null;
@@ -109,23 +110,15 @@ export default function AssetDetailDrawer({ asset, open, onOpenChange }: AssetDe
 
           {/* Actions */}
           <div className="space-y-2 pt-4 border-t border-[#0B0F1A]">
-            <Button 
+            <Button asChild
               className="w-full bg-[#2563EB] hover:bg-[#2563EB]/90 text-white"
-              onClick={() => {
-                // Show coming soon message
-                const message = `${asset.type === 'crypto' ? 'Crypto' : 'Stock'} details page coming soon!`;
-                alert(message);
-              }}
             >
-              <Search className="h-4 w-4 mr-2" />
-              Research Asset
+              <Link href={`/dashboard/markets/${asset.type}/${asset.id}`}><Search className="h-4 w-4 mr-2" />Open Asset Details</Link>
             </Button>
             <Button 
               variant="outline" 
               className="w-full border-[#0B0F1A] text-white hover:bg-[#0B0F1A]"
-              onClick={() => {
-                alert('Add to watchlist feature coming soon!');
-              }}
+              onClick={async () => { await fetch('/api/watchlist', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ assetType: asset.type, assetId: asset.id, symbol: asset.symbol, name: asset.name }) }); onOpenChange(false); }}
             >
               <BookmarkPlus className="h-4 w-4 mr-2" />
               Add to Watchlist
@@ -133,9 +126,7 @@ export default function AssetDetailDrawer({ asset, open, onOpenChange }: AssetDe
             <Button 
               variant="outline" 
               className="w-full border-[#0B0F1A] text-white hover:bg-[#0B0F1A]"
-              onClick={() => {
-                alert('Alert creation coming soon!');
-              }}
+              onClick={() => { window.location.href = `/dashboard/alerts?asset=${encodeURIComponent(asset.symbol)}`; }}
             >
               <Bell className="h-4 w-4 mr-2" />
               Create Alert

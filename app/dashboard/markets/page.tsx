@@ -127,7 +127,7 @@ export default function MarketsPage() {
       setSelectedAsset(existing);
       setDrawerOpen(true);
     } else {
-      alert(`Full data for ${result.symbol} will be available in the asset details view coming soon.`);
+      router.push(`/dashboard/markets/${result.type}/${result.id}`);
     }
   };
 

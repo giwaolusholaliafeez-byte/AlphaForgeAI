@@ -9,52 +9,16 @@ import WatchlistTable from "@/components/watchlist/WatchlistTable";
 import WatchlistMobileCard from "@/components/watchlist/WatchlistMobileCard";
 import AddWatchlistAsset from "@/components/watchlist/AddWatchlistAsset";
 
-// Mock data - will be replaced with real watchlist data in later phases
-const mockWatchlistItems = [
-  {
-    id: "1",
-    symbol: "NVDA",
-    name: "NVIDIA",
-    assetType: "stock",
-    price: 145.67,
-    change: 11.32,
-    changePercent: 8.42,
-    href: "/dashboard/markets/stock/NVDA",
-    addedAt: new Date().toISOString(),
-  },
-  {
-    id: "2",
-    symbol: "AAPL",
-    name: "Apple",
-    assetType: "stock",
-    price: 178.34,
-    change: 1.96,
-    changePercent: 1.11,
-    href: "/dashboard/markets/stock/AAPL",
-    addedAt: new Date().toISOString(),
-  },
-  {
-    id: "3",
-    symbol: "BTC",
-    name: "Bitcoin",
-    assetType: "crypto",
-    price: 68234,
-    change: 1436,
-    changePercent: 2.15,
-    href: "/dashboard/markets/crypto/bitcoin",
-    addedAt: new Date().toISOString(),
-  },
-];
-
 export default function WatchlistPage() {
   const router = useRouter();
-  const [items, setItems] = useState(mockWatchlistItems);
+  const [items, setItems] = useState<Array<{ id: string; symbol: string; name: string; assetType: string; price: number | null; change: number | null; changePercent: number | null; href: string; addedAt: string }>>([]);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [lastUpdated, setLastUpdated] = useState<string | null>(null);
   const [showAddForm, setShowAddForm] = useState(false);
 
   useEffect(() => {
     setLastUpdated(formatPortfolioDateTime(new Date().toISOString()));
+    fetch("/api/watchlist").then((response) => response.json()).then((data) => setItems((data.items ?? []).map((item: { id: string; symbol: string; name: string; asset_type: string; asset_id: string; created_at: string }) => ({ id: item.id, symbol: item.symbol, name: item.name, assetType: item.asset_type, price: null, change: null, changePercent: null, href: `/dashboard/markets/${item.asset_type}/${item.asset_id}`, addedAt: item.created_at })))).catch(() => setItems([]));
   }, []);
 
   const handleRefresh = () => {
@@ -65,10 +29,10 @@ export default function WatchlistPage() {
     }, 500);
   };
 
-  const handleRemove = (id: string) => {
+  const handleRemove = async (id: string) => {
     if (confirm("Remove this asset from your watchlist?")) {
-      setItems(items.filter(item => item.id !== id));
-      router.refresh();
+      const response = await fetch(`/api/watchlist?id=${encodeURIComponent(id)}`, { method: "DELETE" });
+      if (response.ok) setItems((current) => current.filter(item => item.id !== id));
     }
   };
 
@@ -90,20 +54,11 @@ export default function WatchlistPage() {
   };
 
   const handleAdd = async (result: any) => {
-    await new Promise(resolve => setTimeout(resolve, 500));
-    const newItem = {
-      id: Date.now().toString(),
-      symbol: result.symbol,
-      name: result.name,
-      assetType: result.type,
-      price: 100.00,
-      change: 0,
-      changePercent: 0,
-      href: `/dashboard/markets/${result.type}/${result.id}`,
-      addedAt: new Date().toISOString(),
-    };
-    setItems([...items, newItem]);
-    router.refresh();
+    const response = await fetch("/api/watchlist", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ assetType: result.type, assetId: result.id, symbol: result.symbol, name: result.name }) });
+    if (!response.ok) return;
+    const data = await response.json();
+    setItems((current) => [{ id: data.item.id, symbol: data.item.symbol, name: data.item.name, assetType: data.item.asset_type, price: null, change: null, changePercent: null, href: `/dashboard/markets/${data.item.asset_type}/${data.item.asset_id}`, addedAt: data.item.created_at }, ...current]);
+    setShowAddForm(false);
   };
 
   const existingSymbols = items.map(item => item.symbol);

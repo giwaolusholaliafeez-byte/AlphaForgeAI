@@ -6,7 +6,8 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "eslint . --max-warnings=0",
+    "test": "node --test lib/paper/accounting.test.ts"
   },
   "dependencies": {
     "@radix-ui/react-accordion": "latest",
