@@ -51,7 +51,7 @@ export default function NotificationPermissionButton({ compact = false }: { comp
       title={label}
       disabled={permission === "unsupported" || permission === "granted"}
     >
-      {permission === "denied" || permission === "unsupported" ? <BellOff className="h-4.5 w-4.5" /> : <Bell className="h-4.5 w-4.5" />}
+      {permission === "denied" || permission === "unsupported" ? <BellOff className="h-[18px] w-[18px]" /> : <Bell className="h-[18px] w-[18px]" />}
       {compact && <span>{permission === "granted" ? "Notifications enabled" : permission === "denied" ? "Notifications blocked in browser" : permission === "unsupported" ? "Notifications unavailable" : "Allow browser notifications"}</span>}
     </Button>
   );

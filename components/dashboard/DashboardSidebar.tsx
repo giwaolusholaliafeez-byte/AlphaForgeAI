@@ -11,6 +11,7 @@ import {
   Brain,
   Sparkles,
   Newspaper,
+  CalendarDays,
   Bell,
   Landmark,
   Activity,
@@ -30,6 +31,7 @@ const navigationItems = [
   { label: "Watchlist", icon: Bookmark, href: "/dashboard/watchlist" },
   { label: "AI Research", icon: Brain, href: "/dashboard/research" },
   { label: "News Intelligence", icon: Newspaper, href: "/dashboard/news" },
+  { label: "Calendar", icon: CalendarDays, href: "/dashboard/calendar" },
   { label: "Alerts", icon: Bell, href: "/dashboard/alerts" },
   { label: "Accounts", icon: Landmark, href: "/dashboard/accounts" },
   { label: "Activity", icon: Activity, href: "/dashboard/activity" },
@@ -78,7 +80,7 @@ export default function DashboardSidebar() {
               )}
             >
               <Icon className={cn(
-                "h-4.5 w-4.5 transition-colors duration-150 flex-shrink-0",
+                "h-[18px] w-[18px] transition-colors duration-150 flex-shrink-0",
                 isActive ? "text-[#2563EB]" : "text-[#A1A7B3] group-hover:text-white"
               )} />
               <span className="flex-1">{item.label}</span>

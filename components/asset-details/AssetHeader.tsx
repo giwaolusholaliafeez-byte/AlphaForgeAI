@@ -71,13 +71,15 @@ export default function AssetHeader({ asset, onBack }: AssetHeaderProps) {
           </div>
         </div>
 
-        <div className="flex items-center space-x-2">
-          <Link href={`/dashboard/research?assetType=${asset.type}&assetId=${asset.id}`}>
-            <Button variant="outline" className="border-[#1E293B] text-white hover:bg-[#1E293B]">
-              Research Asset
-            </Button>
-          </Link>
-        </div>
+        {asset.type !== "fx" && asset.type !== "index_proxy" && (
+          <div className="flex items-center space-x-2">
+            <Link href={`/dashboard/research?assetType=${asset.type}&assetId=${asset.id}&symbol=${encodeURIComponent(asset.symbol)}&name=${encodeURIComponent(asset.name)}`}>
+              <Button variant="outline" className="border-[#1E293B] text-white hover:bg-[#1E293B]">
+                Research Asset
+              </Button>
+            </Link>
+          </div>
+        )}
       </div>
     </div>
   );

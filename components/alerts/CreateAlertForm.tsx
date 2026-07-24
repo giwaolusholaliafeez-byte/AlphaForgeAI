@@ -1,15 +1,25 @@
 "use client";
 
 import { useState } from "react";
-import { X, Search } from "lucide-react";
+import { X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import AssetSearch from "@/components/markets/AssetSearch";
+import type { MarketSearchResult } from "@/lib/market-data/types";
+
+export interface CreateAlertPayload {
+  assetType: string;
+  assetId: string;
+  symbol: string;
+  condition: "above" | "below";
+  target: number;
+}
 
 interface CreateAlertFormProps {
   onCancel: () => void;
-  onCreate: (data: any) => Promise<void>;
-  initialAsset?: string;
+  onCreate: (data: CreateAlertPayload) => Promise<{ error?: string } | void>;
+  initialSelected?: MarketSearchResult | null;
 }
 
 const CONDITIONS = [
@@ -17,9 +27,16 @@ const CONDITIONS = [
   { value: "below", label: "Price Below" },
 ];
 
-export default function CreateAlertForm({ onCancel, onCreate, initialAsset = "" }: CreateAlertFormProps) {
-  const [asset, setAsset] = useState(initialAsset);
-  const [condition, setCondition] = useState("above");
+async function searchAssets(query: string): Promise<MarketSearchResult[]> {
+  const res = await fetch(`/api/markets/search?q=${encodeURIComponent(query)}`);
+  if (!res.ok) return [];
+  const data = await res.json();
+  return data.results ?? [];
+}
+
+export default function CreateAlertForm({ onCancel, onCreate, initialSelected = null }: CreateAlertFormProps) {
+  const [selected, setSelected] = useState<MarketSearchResult | null>(initialSelected);
+  const [condition, setCondition] = useState<"above" | "below">("above");
   const [target, setTarget] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -28,8 +45,8 @@ export default function CreateAlertForm({ onCancel, onCreate, initialAsset = "" 
     e.preventDefault();
     setError(null);
 
-    if (!asset || !target) {
-      setError("Please fill in all required fields");
+    if (!selected) {
+      setError("Search for and select an asset first");
       return;
     }
 
@@ -41,11 +58,17 @@ export default function CreateAlertForm({ onCancel, onCreate, initialAsset = "" 
 
     setIsLoading(true);
     try {
-      await onCreate({
-        asset,
+      const result = await onCreate({
+        assetType: selected.type,
+        assetId: selected.id,
+        symbol: selected.symbol,
         condition,
         target: targetNum,
       });
+      if (result?.error) {
+        setError(result.error);
+        return;
+      }
       onCancel();
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to create alert");
@@ -55,7 +78,7 @@ export default function CreateAlertForm({ onCancel, onCreate, initialAsset = "" 
   };
 
   return (
-    <div className="bg-[#1E293B] rounded-lg border border-[#1E293B] p-5">
+    <div className="rounded-lg border border-white/[0.06] bg-[#1E293B] p-5">
       <div className="flex items-center justify-between mb-4">
         <h3 className="text-sm font-medium text-white">Create Alert</h3>
         <Button
@@ -80,20 +103,26 @@ export default function CreateAlertForm({ onCancel, onCreate, initialAsset = "" 
           <Label htmlFor="asset" className="text-white text-sm">
             Asset <span className="text-red-500">*</span>
           </Label>
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-[#A1A7B3]" />
-            <Input
-              id="asset"
-              type="text"
-              placeholder="Search and select asset"
-              value={asset}
-              onChange={(e) => setAsset(e.target.value)}
-              className="pl-9 bg-[#0B0F1A] border-[#0B0F1A] text-white placeholder:text-[#A1A7B3] focus:border-[#2563EB] focus:ring-[#2563EB]"
-              disabled={isLoading}
-              required
-            />
-          </div>
-          <p className="text-[10px] text-[#A1A7B3]">Enter asset symbol (e.g., AAPL, BTC)</p>
+          {selected ? (
+            <div className="flex items-center justify-between rounded-lg border border-[#2563EB]/30 bg-[#2563EB]/[0.06] px-3 py-2">
+              <div>
+                <p className="text-sm font-medium text-white">{selected.symbol}</p>
+                <p className="text-xs text-[#8B93A3]">{selected.name}</p>
+              </div>
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                onClick={() => setSelected(null)}
+                className="h-7 text-xs text-[#A1A7B3] hover:text-white"
+              >
+                Change
+              </Button>
+            </div>
+          ) : (
+            <AssetSearch onSearch={searchAssets} onSelect={(result) => setSelected(result)} />
+          )}
+          <p className="text-[10px] text-[#A1A7B3]">Search by symbol or name, e.g. AAPL, Bitcoin</p>
         </div>
 
         {/* Condition */}
@@ -104,7 +133,7 @@ export default function CreateAlertForm({ onCancel, onCreate, initialAsset = "" 
           <select
             id="condition"
             value={condition}
-            onChange={(e) => setCondition(e.target.value)}
+            onChange={(e) => setCondition(e.target.value as "above" | "below")}
             className="w-full px-3 py-2 rounded-lg bg-[#0B0F1A] border border-[#0B0F1A] text-white focus:border-[#2563EB] focus:ring-[#2563EB]"
             disabled={isLoading}
           >
@@ -137,7 +166,7 @@ export default function CreateAlertForm({ onCancel, onCreate, initialAsset = "" 
         <div className="flex items-center gap-3 pt-2">
           <Button
             type="submit"
-            disabled={isLoading}
+            disabled={isLoading || !selected}
             className="bg-[#2563EB] hover:bg-[#2563EB]/90 text-white"
           >
             {isLoading ? "Creating..." : "Create Alert"}
@@ -153,12 +182,6 @@ export default function CreateAlertForm({ onCancel, onCreate, initialAsset = "" 
           </Button>
         </div>
       </form>
-
-      <div className="mt-4 p-3 rounded-lg bg-[#F4B000]/5 border border-[#F4B000]/10">
-        <p className="text-xs text-[#A1A7B3]">
-          ⚠️ Alert creation is currently in preview. Real-time notifications will be connected in a future phase.
-        </p>
-      </div>
     </div>
   );
 }

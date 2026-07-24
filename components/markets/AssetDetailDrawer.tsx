@@ -126,7 +126,7 @@ export default function AssetDetailDrawer({ asset, open, onOpenChange }: AssetDe
             <Button 
               variant="outline" 
               className="w-full border-[#0B0F1A] text-white hover:bg-[#0B0F1A]"
-              onClick={() => { window.location.href = `/dashboard/alerts?asset=${encodeURIComponent(asset.symbol)}`; }}
+              onClick={() => { window.location.href = `/dashboard/alerts?assetType=${asset.type}&assetId=${encodeURIComponent(asset.id)}&symbol=${encodeURIComponent(asset.symbol)}&name=${encodeURIComponent(asset.name)}`; }}
             >
               <Bell className="h-4 w-4 mr-2" />
               Create Alert

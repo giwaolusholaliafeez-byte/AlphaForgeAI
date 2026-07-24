@@ -58,8 +58,15 @@ export default function SignUpPage() {
   };
 
   return (
-    <div className="min-h-screen bg-[#0B0F1A] flex items-center justify-center p-4">
-      <div className="w-full max-w-md">
+    <div className="relative min-h-screen overflow-hidden bg-[#0B0F1A] flex items-center justify-center p-4">
+      <div
+        className="pointer-events-none absolute inset-0 bg-grid-fine opacity-40"
+        style={{
+          maskImage: "radial-gradient(ellipse 700px 500px at 50% 20%, black 0%, transparent 70%)",
+          WebkitMaskImage: "radial-gradient(ellipse 700px 500px at 50% 20%, black 0%, transparent 70%)",
+        }}
+      />
+      <div className="relative w-full max-w-md">
         <Link 
           href="/" 
           className="inline-flex items-center text-[#A1A7B3] hover:text-white transition-colors mb-6 text-sm"

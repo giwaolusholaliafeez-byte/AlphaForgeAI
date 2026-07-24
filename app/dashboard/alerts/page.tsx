@@ -1,12 +1,39 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import { Bell } from "lucide-react";
 import { useSearchParams } from "next/navigation";
 import { useRouter } from "next/navigation";
 import AlertsPageHeader from "@/components/alerts/AlertsPageHeader";
 import AlertsTable from "@/components/alerts/AlertsTable";
-import CreateAlertForm from "@/components/alerts/CreateAlertForm";
+import CreateAlertForm, { CreateAlertPayload } from "@/components/alerts/CreateAlertForm";
 import { AlertItem } from "@/components/alerts/AlertsTable";
+import type { MarketSearchResult } from "@/lib/market-data/types";
+
+interface RawAlert {
+  id: string;
+  symbol: string;
+  target: number;
+  condition: string;
+  status: string;
+  triggered_at: string | null;
+  trigger_price: number | null;
+  created_at: string;
+}
+
+function mapAlert(item: RawAlert): AlertItem {
+  return {
+    id: item.id,
+    assetSymbol: item.symbol,
+    assetName: item.symbol,
+    condition: item.condition === "above" ? "Price Above" : "Price Below",
+    target: Number(item.target),
+    currentValue: item.trigger_price !== null ? Number(item.trigger_price) : null,
+    status: item.status === "disabled" ? "paused" : (item.status as "active" | "triggered"),
+    lastTriggered: item.triggered_at,
+    createdAt: item.created_at,
+  };
+}
 
 export default function AlertsPage() {
   const router = useRouter();
@@ -14,7 +41,35 @@ export default function AlertsPage() {
   const [alerts, setAlerts] = useState<AlertItem[]>([]);
   const [showCreateForm, setShowCreateForm] = useState(false);
 
-  useEffect(() => { fetch("/api/alerts").then((response) => response.json()).then((data) => setAlerts((data.alerts ?? []).map((item: { id: string; symbol: string; target: number; condition: string; status: string; triggered_at: string | null; created_at: string }) => ({ id: item.id, assetSymbol: item.symbol, assetName: item.symbol, condition: item.condition === "above" ? "Price Above" : "Price Below", target: Number(item.target), currentValue: null, status: item.status === "disabled" ? "paused" : item.status as "active" | "triggered", lastTriggered: item.triggered_at, createdAt: item.created_at })))).catch(() => setAlerts([])); }, []);
+  const deepLinkAsset: MarketSearchResult | null = useMemo(() => {
+    const assetType = searchParams.get("assetType");
+    const assetId = searchParams.get("assetId");
+    const symbol = searchParams.get("symbol");
+    if (!assetType || !assetId || !symbol) return null;
+    return {
+      id: assetId,
+      symbol,
+      name: searchParams.get("name") ?? symbol,
+      type: assetType as MarketSearchResult["type"],
+      source: "deep-link",
+    };
+  }, [searchParams]);
+
+  const loadAlerts = () => {
+    fetch("/api/alerts")
+      .then((response) => response.json())
+      .then((data) => setAlerts((data.alerts ?? []).map(mapAlert)))
+      .catch(() => setAlerts([]));
+  };
+
+  useEffect(() => {
+    // Evaluate active alerts against live prices, then load the latest state.
+    fetch("/api/alerts/evaluate", { method: "POST" })
+      .catch(() => {})
+      .finally(loadAlerts);
+    if (deepLinkAsset) setShowCreateForm(true);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const handleToggle = (id: string) => {
     const current = alerts.find((alert) => alert.id === id);
@@ -30,15 +85,17 @@ export default function AlertsPage() {
     }
   };
 
-  const handleCreate = async (data: any) => {
-    const search = await fetch(`/api/markets/search?q=${encodeURIComponent(data.asset)}`).then((response) => response.json());
-    const result = search.results?.[0];
-    if (!result) return;
-    const response = await fetch("/api/alerts", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ assetType: result.type, assetId: result.id, symbol: result.symbol, condition: data.condition, target: Number(data.target) }) });
-    if (!response.ok) return;
-    const saved = await response.json();
-    setAlerts((current) => [{ id: saved.alert.id, assetSymbol: saved.alert.symbol, assetName: saved.alert.symbol, condition: data.condition === "above" ? "Price Above" : "Price Below", target: Number(saved.alert.target), currentValue: null, status: "active", lastTriggered: null, createdAt: saved.alert.created_at }, ...current]);
-    setShowCreateForm(false);
+  const handleCreate = async (data: CreateAlertPayload): Promise<{ error?: string } | void> => {
+    const response = await fetch("/api/alerts", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(data),
+    });
+    const body = await response.json().catch(() => ({}));
+    if (!response.ok) {
+      return { error: body?.error ?? "Failed to create alert." };
+    }
+    setAlerts((current) => [mapAlert(body.alert), ...current]);
   };
 
   return (
@@ -50,11 +107,16 @@ export default function AlertsPage() {
         onCreateAlert={() => setShowCreateForm(true)}
       />
 
+      <div className="flex items-start gap-2 rounded-lg border border-white/[0.06] bg-white/[0.02] px-3.5 py-2.5 text-xs text-[#8B93A3]">
+        <Bell className="mt-0.5 h-3.5 w-3.5 flex-shrink-0 text-[#5B6472]" />
+        Alerts are checked against live prices whenever this page loads and marked triggered here — email and push delivery are not wired up yet.
+      </div>
+
       {showCreateForm && (
         <CreateAlertForm
           onCancel={() => setShowCreateForm(false)}
           onCreate={handleCreate}
-          initialAsset={searchParams.get("symbol") ?? searchParams.get("assetId") ?? ""}
+          initialSelected={deepLinkAsset}
         />
       )}
 
@@ -63,10 +125,6 @@ export default function AlertsPage() {
         onToggle={handleToggle}
         onDelete={handleDelete}
       />
-
-      <div className="text-center text-[10px] text-[#A1A7B3]">
-        Alert notifications will be connected in a future phase
-      </div>
     </div>
   );
 }

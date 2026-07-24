@@ -4,9 +4,9 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
-import { 
-  Menu, X, LayoutDashboard, BarChart3, Wallet, Bookmark, 
-  Brain, Sparkles, Newspaper, Bell, Landmark, Activity, Settings, LogOut
+import {
+  Menu, X, LayoutDashboard, BarChart3, Wallet, Bookmark,
+  Brain, Sparkles, Newspaper, CalendarDays, Bell, Landmark, Activity, Settings, LogOut
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { signOut } from "@/app/auth/actions";
@@ -20,6 +20,7 @@ const navigationItems = [
   { label: "Watchlist", icon: Bookmark, href: "/dashboard/watchlist" },
   { label: "AI Research", icon: Brain, href: "/dashboard/research" },
   { label: "News Intelligence", icon: Newspaper, href: "/dashboard/news" },
+  { label: "Calendar", icon: CalendarDays, href: "/dashboard/calendar" },
   { label: "Alerts", icon: Bell, href: "/dashboard/alerts" },
   { label: "Accounts", icon: Landmark, href: "/dashboard/accounts" },
   { label: "Activity", icon: Activity, href: "/dashboard/activity" },
@@ -68,7 +69,7 @@ export default function DashboardMobileNav({ user }: DashboardMobileNavProps) {
         className="h-10 w-10 shrink-0 text-white md:hidden"
         aria-label="Open navigation menu"
       >
-        <Menu className="h-4.5 w-4.5" />
+        <Menu className="h-[18px] w-[18px]" />
       </Button>
 
       {/* Overlay */}
@@ -114,7 +115,7 @@ export default function DashboardMobileNav({ user }: DashboardMobileNavProps) {
               className="text-[#A1A7B3] hover:text-white h-8 w-8"
               aria-label="Close navigation menu"
             >
-              <X className="h-4.5 w-4.5" />
+              <X className="h-[18px] w-[18px]" />
             </Button>
           </div>
 
@@ -146,7 +147,7 @@ export default function DashboardMobileNav({ user }: DashboardMobileNavProps) {
                   )}
                 >
                   <Icon className={cn(
-                    "h-4.5 w-4.5 flex-shrink-0 transition-colors duration-150",
+                    "h-[18px] w-[18px] flex-shrink-0 transition-colors duration-150",
                     isActive ? "text-[#2563EB]" : "text-[#A1A7B3]"
                   )} />
                   <span>{item.label}</span>

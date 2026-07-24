@@ -9,8 +9,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
-import { ArrowLeft, Mail, Lock, Eye, EyeOff, Chrome } from "lucide-react";
-import { signIn, signInWithGoogle } from "@/app/auth/actions";
+import { ArrowLeft, Mail, Lock, Eye, EyeOff } from "lucide-react";
+import { signIn } from "@/app/auth/actions";
 
 export default function SignInContent() {
   const router = useRouter();
@@ -24,7 +24,6 @@ export default function SignInContent() {
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(errorParam || null);
-  const [googleLoading, setGoogleLoading] = useState(false);
 
   useEffect(() => {
     if (errorParam) {
@@ -60,19 +59,16 @@ export default function SignInContent() {
     }
   };
 
-  const handleGoogleSignIn = async () => {
-    setGoogleLoading(true);
-    setError(null);
-    const result = await signInWithGoogle();
-    if (result && result.error) {
-      setError(result.error);
-      setGoogleLoading(false);
-    }
-  };
-
   return (
-    <div className="min-h-screen bg-[#0B0F1A] flex items-center justify-center p-4">
-      <div className="w-full max-w-md">
+    <div className="relative min-h-screen overflow-hidden bg-[#0B0F1A] flex items-center justify-center p-4">
+      <div
+        className="pointer-events-none absolute inset-0 bg-grid-fine opacity-40"
+        style={{
+          maskImage: "radial-gradient(ellipse 700px 500px at 50% 20%, black 0%, transparent 70%)",
+          WebkitMaskImage: "radial-gradient(ellipse 700px 500px at 50% 20%, black 0%, transparent 70%)",
+        }}
+      />
+      <div className="relative w-full max-w-md">
         <Link 
           href="/" 
           className="inline-flex items-center text-[#A1A7B3] hover:text-white transition-colors mb-6 text-sm"
@@ -184,34 +180,12 @@ export default function SignInContent() {
               </div>
 
               {/* Sign In Button */}
-              <Button 
-                type="submit" 
+              <Button
+                type="submit"
                 className="w-full bg-[#2563EB] hover:bg-[#2563EB]/90 text-white"
                 disabled={loading}
               >
                 {loading ? "Signing in..." : "Sign In"}
-              </Button>
-
-              {/* Divider */}
-              <div className="relative">
-                <div className="absolute inset-0 flex items-center">
-                  <div className="w-full border-t border-[#0B0F1A]"></div>
-                </div>
-                <div className="relative flex justify-center text-xs">
-                  <span className="px-2 bg-[#1E293B] text-[#A1A7B3]">or continue with</span>
-                </div>
-              </div>
-
-              {/* Google Sign In */}
-              <Button 
-                type="button"
-                variant="outline"
-                onClick={handleGoogleSignIn}
-                disabled={googleLoading}
-                className="w-full border-[#0B0F1A] text-white hover:bg-[#0B0F1A] hover:text-white"
-              >
-                <Chrome className="h-4 w-4 mr-2" />
-                {googleLoading ? "Connecting..." : "Continue with Google"}
               </Button>
             </form>
 

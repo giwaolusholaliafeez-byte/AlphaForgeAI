@@ -17,16 +17,26 @@ export default function AIInsightCard({
 }: AIInsightCardProps) {
   if (!isAvailable) {
     return (
-      <div className="bg-[#1E293B] rounded-lg border border-[#1E293B] p-5 h-full flex flex-col items-center justify-center text-center">
-        <div className="p-3 rounded-full bg-[#00C2A8]/5 border border-[#00C2A8]/10 mb-3">
-          <Brain className="h-6 w-6 text-[#00C2A8]" />
+      <div className="flex h-full flex-col justify-between rounded-lg border border-white/[0.06] bg-[#1E293B] p-5">
+        <div>
+          <div className="flex items-center gap-2">
+            <span className="flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-full bg-[#00C2A8]/10">
+              <Brain className="h-3.5 w-3.5 text-[#00C2A8]" />
+            </span>
+            <span className="text-xs font-medium uppercase tracking-wider text-[#A1A7B3]">AI Research</span>
+          </div>
+          <div className="mt-4 rounded-lg border border-white/[0.06] bg-[#0B0F1A]/60 p-3">
+            <p className="text-[11px] text-[#5B6472]">Try asking</p>
+            <p className="mt-1 text-sm leading-relaxed text-[#CBD5E1]">
+              &ldquo;Summarize what&apos;s driving AAPL today, with sources.&rdquo;
+            </p>
+          </div>
+          <p className="mt-3 text-xs leading-relaxed text-[#8B93A3]">
+            Generate a sourced asset brief grounded in live price, fundamentals, and news.
+          </p>
         </div>
-        <h3 className="text-sm font-medium text-white mb-1">AI Research</h3>
-        <p className="text-xs text-[#A1A7B3] max-w-xs">
-          Generate a sourced asset brief from the AI Research workspace.
-        </p>
         <Link href="/dashboard/research">
-          <Button variant="ghost" size="sm" className="mt-3 text-[#00C2A8] hover:text-[#00C2A8]/80 text-xs">
+          <Button variant="ghost" size="sm" className="mt-3 px-0 text-xs text-[#00C2A8] hover:text-[#00C2A8]/80">
             Open Research
             <ChevronRight className="h-3 w-3 ml-1" />
           </Button>

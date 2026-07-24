@@ -14,9 +14,16 @@ export default function CTA() {
           whileInView={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5 }}
           viewport={{ once: true }}
-          className="mx-auto max-w-2xl rounded-2xl border border-white/[0.08] bg-white/[0.02] px-6 py-14 text-center sm:px-14"
+          className="relative mx-auto max-w-2xl overflow-hidden rounded-2xl border border-white/[0.08] bg-white/[0.02] px-6 py-14 text-center sm:px-14"
         >
-          <h2 className="text-3xl font-semibold tracking-tight text-white md:text-4xl">
+          <div
+            className="pointer-events-none absolute inset-0 bg-grid-fine opacity-40"
+            style={{
+              maskImage: "radial-gradient(ellipse 500px 260px at 50% 0%, black 0%, transparent 75%)",
+              WebkitMaskImage: "radial-gradient(ellipse 500px 260px at 50% 0%, black 0%, transparent 75%)",
+            }}
+          />
+          <h2 className="text-section-title relative text-white">
             Build your research workspace
           </h2>
           <p className="mt-4 text-[#A1A7B3]">

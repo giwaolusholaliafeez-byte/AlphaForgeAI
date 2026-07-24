@@ -10,11 +10,19 @@ import { X, Plus } from 'lucide-react';
 
 interface CreatePortfolioFormProps {
   onSuccess?: () => void;
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
 }
 
-export default function CreatePortfolioForm({ onSuccess }: CreatePortfolioFormProps) {
+export default function CreatePortfolioForm({ onSuccess, open, onOpenChange }: CreatePortfolioFormProps) {
   const router = useRouter();
-  const [isOpen, setIsOpen] = useState(false);
+  const isControlled = open !== undefined;
+  const [internalOpen, setInternalOpen] = useState(false);
+  const isOpen = isControlled ? open : internalOpen;
+  const setIsOpen = (next: boolean) => {
+    if (onOpenChange) onOpenChange(next);
+    if (!isControlled) setInternalOpen(next);
+  };
   const [name, setName] = useState('');
   const [cashBalance, setCashBalance] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -57,6 +65,7 @@ export default function CreatePortfolioForm({ onSuccess }: CreatePortfolioFormPr
   };
 
   if (!isOpen) {
+    if (isControlled) return null;
     return (
       <Button
         type="button"

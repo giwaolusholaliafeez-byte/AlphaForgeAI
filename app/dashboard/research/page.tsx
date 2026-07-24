@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useSearchParams } from "next/navigation";
 import { Brain, ChevronRight, ExternalLink, Search, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -10,6 +11,7 @@ type Source = { name: string; url: string | null; publishedAt: string | null; de
 type Report = { title: string; summary: string; sections: Array<{ title: string; content: string }>; sources: Source[]; asOf: string; assetType: string; symbol: string; assetId: string };
 
 export default function ResearchPage() {
+  const searchParams = useSearchParams();
   const [query, setQuery] = useState("");
   const [asset, setAsset] = useState<SearchResult | null>(null);
   const [results, setResults] = useState<SearchResult[]>([]);
@@ -26,16 +28,28 @@ export default function ResearchPage() {
     return () => window.clearTimeout(timer);
   }, [query, asset]);
 
-  async function generate(followUp?: string) {
-    if (!asset) return;
+  async function generate(followUp?: string, assetOverride?: SearchResult) {
+    const target = assetOverride ?? asset;
+    if (!target) return;
     setLoading(true); setError(null);
     try {
-      const response = await fetch("/api/research", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ assetType: asset.type, assetId: asset.id, question: followUp || undefined }) });
+      const response = await fetch("/api/research", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ assetType: target.type, assetId: target.id, question: followUp || undefined }) });
       const data = await response.json();
       if (!response.ok) throw new Error(data.error ?? "AI research is temporarily unavailable.");
       setReport(data.report);
     } catch (caught) { setError(caught instanceof Error ? caught.message : "AI research is temporarily unavailable."); } finally { setLoading(false); }
   }
+
+  useEffect(() => {
+    const assetType = searchParams.get("assetType");
+    const assetId = searchParams.get("assetId");
+    const symbol = searchParams.get("symbol");
+    if (!assetType || !assetId || !["stock", "etf", "crypto"].includes(assetType)) return;
+    const deepLinkAsset: SearchResult = { id: assetId, symbol: symbol ?? assetId, name: searchParams.get("name") ?? symbol ?? assetId, type: assetType as SearchResult["type"] };
+    setAsset(deepLinkAsset);
+    generate(undefined, deepLinkAsset);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   async function saveReport() {
     if (!report) return;

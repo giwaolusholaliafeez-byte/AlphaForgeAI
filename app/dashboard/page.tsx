@@ -104,13 +104,13 @@ export default async function DashboardPage() {
     <div className="space-y-6">
       {/* Page Header */}
       <div>
-        <h1 className="text-xl font-semibold tracking-tight text-white">
+        <h1 className="text-page-title text-white">
           {isDemo ? "Market Overview" : "Dashboard"}
         </h1>
-        <p className="text-sm text-[#A1A7B3]">
+        <p className="mt-1 text-sm text-[#A1A7B3]">
           {isDemo ? "Simulated market intelligence" : "Your financial intelligence command centre"}
         </p>
-        <p className="text-xs text-[#A1A7B3] mt-0.5">
+        <p className="num mt-0.5 text-xs text-[#5B6472]">
           Last updated: {formatPortfolioDateTime(generatedAt)}
         </p>
       </div>
@@ -131,7 +131,6 @@ export default async function DashboardPage() {
             holdingsCount={displayPortfolio?.holdingsCount || 0}
             isPositive={displayPortfolio?.isPositive || false}
             isDemo={isDemo}
-            isLoading={!displayPortfolio && !isDemo}
           />
         </div>
         <div className="lg:col-span-1">

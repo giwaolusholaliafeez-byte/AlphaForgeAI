@@ -2,7 +2,13 @@
 
 import { motion } from "framer-motion";
 import { Check } from "lucide-react";
-import { marketCoverage } from "@/data/marketCoverage";
+
+const assetClasses = [
+  { label: "Stocks & ETFs", examples: "AAPL · NVDA · MSFT · SPY" },
+  { label: "Cryptocurrency", examples: "BTC · ETH · SOL · XRP" },
+  { label: "Foreign exchange", examples: "EUR/USD · GBP/USD · USD/JPY" },
+  { label: "Indices", examples: "S&P 500 · Nasdaq · Dow · Russell" },
+];
 
 const capabilityList = [
   "Real-time market data across stocks, ETFs, crypto, and forex",
@@ -15,7 +21,7 @@ const capabilityList = [
 
 export default function Capabilities() {
   return (
-    <section className="py-20 sm:py-24 bg-[#0B0F1A]">
+    <section className="border-t border-white/[0.06] bg-[#0B0F1A] py-20 sm:py-24">
       <div className="container">
         <div className="grid gap-10 lg:grid-cols-2 lg:gap-16">
           <motion.div
@@ -24,23 +30,28 @@ export default function Capabilities() {
             transition={{ duration: 0.5 }}
             viewport={{ once: true }}
           >
-            <h2 className="text-2xl font-semibold tracking-tight text-white sm:text-3xl">
+            <div className="label-eyebrow">
+              <span className="label-eyebrow-dot" />
+              Coverage
+            </div>
+            <h2 className="text-section-title mt-4 text-white">
               Markets you can actually research
             </h2>
             <p className="mt-3 text-[#A1A7B3]">
               Coverage across the asset classes that matter, backed by live data providers.
             </p>
-            <div className="mt-8 grid grid-cols-2 gap-3">
-              {marketCoverage.map((item) => {
-                const Icon = item.icon;
-                return (
-                  <div key={item.id} className="rounded-xl border border-white/[0.06] bg-white/[0.02] p-4">
-                    <Icon className="h-4 w-4 text-[#2563EB]" />
-                    <p className="mt-2.5 text-sm font-medium text-white">{item.title}</p>
-                    <p className="mt-1 text-xs leading-relaxed text-[#8B93A3]">{item.description}</p>
-                  </div>
-                );
-              })}
+            <div className="mt-8 overflow-hidden rounded-xl border border-white/[0.06]">
+              {assetClasses.map((asset, index) => (
+                <div
+                  key={asset.label}
+                  className={`flex items-center justify-between px-4 py-3.5 ${
+                    index !== assetClasses.length - 1 ? "border-b border-white/[0.06]" : ""
+                  } ${index % 2 === 0 ? "bg-white/[0.015]" : ""}`}
+                >
+                  <span className="text-sm font-medium text-white">{asset.label}</span>
+                  <span className="num text-xs text-[#5B6472]">{asset.examples}</span>
+                </div>
+              ))}
             </div>
           </motion.div>
 
@@ -50,7 +61,11 @@ export default function Capabilities() {
             transition={{ duration: 0.5, delay: 0.1 }}
             viewport={{ once: true }}
           >
-            <h2 className="text-2xl font-semibold tracking-tight text-white sm:text-3xl">
+            <div className="label-eyebrow">
+              <span className="label-eyebrow-dot" />
+              Workflow
+            </div>
+            <h2 className="text-section-title mt-4 text-white">
               Built for the full research workflow
             </h2>
             <p className="mt-3 text-[#A1A7B3]">

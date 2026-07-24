@@ -3,6 +3,7 @@
 import { Bell, BellOff, Pause, Play, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import TableEmptyState from "@/components/common/TableEmptyState";
 import { cn } from "@/lib/utils";
 
 export interface AlertItem {
@@ -39,10 +40,12 @@ export default function AlertsTable({ items, onToggle, onDelete, className }: Al
 
   if (items.length === 0) {
     return (
-      <div className={cn("bg-[#1E293B] rounded-lg border border-[#1E293B] p-8 text-center", className)}>
-        <p className="text-[#A1A7B3]">No alerts configured</p>
-        <p className="text-xs text-[#A1A7B3] mt-1">Create your first alert to start monitoring</p>
-      </div>
+      <TableEmptyState
+        className={className}
+        icon={<Bell className="h-5 w-5" />}
+        title="No alerts configured"
+        description='Use "Create Alert" above to get notified the moment an asset crosses a price level you care about.'
+      />
     );
   }
 

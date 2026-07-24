@@ -13,3 +13,4 @@ tsconfig.tsbuildinfo
 .fix-backups/
 *.before-*
 .DS_Store
+.tmp-tools/

@@ -209,7 +209,11 @@ export default function PlatformShowcase() {
           viewport={{ once: true }}
           className="mx-auto mb-12 max-w-2xl text-center"
         >
-          <h2 className="text-3xl font-semibold tracking-tight text-white md:text-4xl">
+          <div className="label-eyebrow justify-center">
+            <span className="label-eyebrow-dot" />
+            The workspace
+          </div>
+          <h2 className="text-section-title mt-4 text-white">
             One workspace, every part of the workflow
           </h2>
           <p className="mt-4 text-[#A1A7B3]">

@@ -100,6 +100,43 @@
   }
 }
 
+@layer components {
+  /* Type scale — use these instead of one-off text-4xl/text-5xl combinations */
+  .text-display {
+    @apply text-[2.75rem] font-semibold leading-[1.04] tracking-[-0.02em] sm:text-[3.5rem] lg:text-[4.25rem];
+  }
+  .text-display-sm {
+    @apply text-4xl font-semibold leading-[1.08] tracking-[-0.02em] sm:text-[2.75rem];
+  }
+  .text-section-title {
+    @apply text-[1.75rem] font-semibold leading-[1.15] tracking-[-0.015em] sm:text-[2.25rem];
+  }
+  .text-page-title {
+    @apply text-xl font-semibold leading-tight tracking-[-0.01em] sm:text-2xl;
+  }
+  .label-eyebrow {
+    @apply inline-flex items-center gap-2 font-mono text-[11px] font-medium uppercase tracking-[0.14em] text-[#8B93A3];
+  }
+  .label-eyebrow-dot {
+    @apply relative flex h-1.5 w-1.5 flex-shrink-0 rounded-full bg-[#00C2A8];
+  }
+  .label-eyebrow-dot::after {
+    content: "";
+    @apply absolute inset-0 -m-1 animate-pulse rounded-full bg-[#00C2A8]/40;
+  }
+
+  /* Financial number styling */
+  .num {
+    @apply font-mono tabular-nums;
+  }
+  .num-positive {
+    @apply text-[#00C2A8];
+  }
+  .num-negative {
+    @apply text-red-400;
+  }
+}
+
 @layer utilities {
   .text-balance {
     text-wrap: balance;
@@ -161,8 +198,16 @@
   .card-premium {
     @apply bg-[#111827] border border-white/[0.06] rounded-lg;
   }
-  
+
   .card-premium-hover {
     @apply hover:border-white/[0.08] transition-colors duration-150;
+  }
+
+  /* Fine terminal-style grid texture — used sparingly behind hero/section compositions */
+  .bg-grid-fine {
+    background-image:
+      linear-gradient(rgba(255, 255, 255, 0.035) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(255, 255, 255, 0.035) 1px, transparent 1px);
+    background-size: 32px 32px;
   }
 }

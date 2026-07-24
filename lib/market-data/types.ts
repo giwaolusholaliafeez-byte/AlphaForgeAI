@@ -225,6 +225,29 @@ export interface AssetNewsItem {
   relatedAsset?: string | null;
 }
 
+export interface EarningsCalendarItem {
+  symbol: string;
+  date: string;
+  hour: string | null;
+  quarter: number | null;
+  year: number | null;
+  epsEstimate: number | null;
+  epsActual: number | null;
+  revenueEstimate: number | null;
+  revenueActual: number | null;
+}
+
+export interface IpoCalendarItem {
+  symbol: string | null;
+  name: string;
+  date: string;
+  exchange: string | null;
+  priceRange: string | null;
+  numberOfShares: number | null;
+  totalSharesValue: number | null;
+  status: string;
+}
+
 export interface AssetDetailResponse {
   data: AssetDetail | null;
   error: string | null;

@@ -1,8 +1,9 @@
 "use client";
 
 import Link from "next/link";
-import { ArrowUp, ArrowDown, Trash2, ExternalLink } from "lucide-react";
+import { ArrowUp, ArrowDown, Trash2, ExternalLink, Bookmark } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import TableEmptyState from "@/components/common/TableEmptyState";
 import { cn } from "@/lib/utils";
 
 export interface WatchlistItem {
@@ -47,10 +48,12 @@ export default function WatchlistTable({ items, onRemove, className }: Watchlist
 
   if (items.length === 0) {
     return (
-      <div className={cn("bg-[#1E293B] rounded-lg border border-[#1E293B] p-8 text-center", className)}>
-        <p className="text-[#A1A7B3]">No assets in your watchlist yet</p>
-        <p className="text-xs text-[#A1A7B3] mt-1">Click "Add Asset" to start tracking</p>
-      </div>
+      <TableEmptyState
+        className={className}
+        icon={<Bookmark className="h-5 w-5" />}
+        title="No assets in your watchlist yet"
+        description='Use "Add Asset" above to start tracking price moves on the stocks, crypto, or forex pairs you care about.'
+      />
     );
   }
 

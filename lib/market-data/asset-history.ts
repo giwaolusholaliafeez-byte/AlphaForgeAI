@@ -26,61 +26,98 @@ export const HISTORY_RANGES: HistoryRange[] = [
   { label: "MAX", value: "MAX", days: 3650 },
 ];
 
+async function getStockHistoryFromTwelveData(
+  symbol: string,
+  range: string,
+  interval: string
+): Promise<AssetHistoricalSeries | null> {
+  const twelveKey = process.env.TWELVE_DATA_API_KEY;
+  if (!twelveKey) return null;
+
+  const intervalMap: Record<string, string> = { '1m': '1min', '5m': '5min', '15m': '15min', '30m': '30min', '1H': '1h', '4H': '4h', '1D': '1day', '1W': '1week' };
+  const rangeConfig = HISTORY_RANGES.find((r) => r.value === range);
+  if (!rangeConfig) return null;
+
+  const twelveInterval = intervalMap[interval] ?? (rangeConfig.days <= 1 ? '15min' : rangeConfig.days <= 7 ? '1h' : rangeConfig.days <= 90 ? '1day' : '1week');
+  const outputsize = range === '1D' ? 100 : range === '5D' ? 200 : range === '1M' ? 500 : range === '3M' ? 1000 : range === '6M' ? 1500 : 2500;
+
+  const response = await new TwelveDataClient(twelveKey).getTimeSeries(symbol, twelveInterval, outputsize).catch(() => null);
+  const candles: AssetCandle[] = (response?.values ?? [])
+    .map((item) => ({
+      timestamp: Date.parse(item.datetime.includes(' ') ? item.datetime.replace(' ', 'T') + 'Z' : item.datetime + 'T00:00:00Z'),
+      open: Number(item.open),
+      high: Number(item.high),
+      low: Number(item.low),
+      close: Number(item.close),
+      volume: item.volume ? Number(item.volume) : null,
+    }))
+    .filter((item) => Number.isFinite(item.timestamp) && [item.open, item.high, item.low, item.close].every(Number.isFinite))
+    .sort((a, b) => a.timestamp - b.timestamp);
+
+  if (!candles.length) return null;
+
+  return {
+    points: candles.map((candle) => ({ timestamp: candle.timestamp, value: candle.close })),
+    candles,
+    range,
+    source: "twelvedata",
+    lastUpdated: new Date().toISOString(),
+  };
+}
+
 export async function getStockHistory(
   symbol: string,
   range: string,
   interval = '1D'
 ): Promise<AssetHistoricalSeries | null> {
   const apiKey = process.env.FINNHUB_API_KEY;
+  const rangeConfig = HISTORY_RANGES.find((r) => r.value === range);
+  if (!rangeConfig) return null;
 
-  if (!apiKey) {
-    return null;
+  if (apiKey) {
+    try {
+      const client = new FinnhubClient(apiKey);
+
+      const to = Math.floor(Date.now() / 1000);
+      const from = to - rangeConfig.days * 24 * 60 * 60;
+
+      let resolution: string;
+      const requestedResolution: Record<string, string> = { '1m': '1', '5m': '5', '15m': '15', '30m': '30', '1H': '60', '4H': '60', '1D': 'D', '1W': 'W' };
+      if (requestedResolution[interval]) resolution = requestedResolution[interval];
+      else if (rangeConfig.days <= 1) resolution = "5";
+      else if (rangeConfig.days <= 7) resolution = "15";
+      else if (rangeConfig.days <= 30) resolution = "60";
+      else if (rangeConfig.days <= 90) resolution = "D";
+      else resolution = "W";
+
+      // Use the existing getCandles method from FinnhubClient
+      const candles = await client.getCandles(symbol, resolution, from, to);
+
+      if (candles?.c?.length) {
+        const normalizedCandles: AssetCandle[] = candles.t.map((timestamp: number, index: number) => ({ timestamp: timestamp * 1000, open: candles.o[index], high: candles.h[index], low: candles.l[index], close: candles.c[index], volume: candles.v?.[index] ?? null })).filter((c: AssetCandle) => [c.open, c.high, c.low, c.close].every(Number.isFinite));
+        if (normalizedCandles.length) {
+          const points: AssetHistoricalPoint[] = normalizedCandles.map((candle) => ({
+            timestamp: candle.timestamp,
+            value: candle.close,
+          }));
+
+          return {
+            points,
+            candles: normalizedCandles,
+            range,
+            source: "finnhub",
+            lastUpdated: new Date().toISOString(),
+          };
+        }
+      }
+    } catch (error) {
+      console.warn(`Failed to fetch history for ${symbol} from Finnhub:`, error);
+    }
   }
 
-  try {
-    const client = new FinnhubClient(apiKey);
-
-    const rangeConfig = HISTORY_RANGES.find((r) => r.value === range);
-    if (!rangeConfig) {
-      return null;
-    }
-
-    const to = Math.floor(Date.now() / 1000);
-    const from = to - rangeConfig.days * 24 * 60 * 60;
-
-    let resolution: string;
-    const requestedResolution: Record<string, string> = { '1m': '1', '5m': '5', '15m': '15', '30m': '30', '1H': '60', '4H': '60', '1D': 'D', '1W': 'W' };
-    if (requestedResolution[interval]) resolution = requestedResolution[interval];
-    else if (rangeConfig.days <= 1) resolution = "5";
-    else if (rangeConfig.days <= 7) resolution = "15";
-    else if (rangeConfig.days <= 30) resolution = "60";
-    else if (rangeConfig.days <= 90) resolution = "D";
-    else resolution = "W";
-
-    // Use the existing getCandles method from FinnhubClient
-    const candles = await client.getCandles(symbol, resolution, from, to);
-
-    if (!candles || !candles.c || candles.c.length === 0) {
-      return null;
-    }
-
-    const normalizedCandles: AssetCandle[] = candles.t.map((timestamp: number, index: number) => ({ timestamp: timestamp * 1000, open: candles.o[index], high: candles.h[index], low: candles.l[index], close: candles.c[index], volume: candles.v?.[index] ?? null })).filter((c: AssetCandle) => [c.open, c.high, c.low, c.close].every(Number.isFinite));
-    const points: AssetHistoricalPoint[] = normalizedCandles.map((candle) => ({
-      timestamp: candle.timestamp,
-      value: candle.close,
-    }));
-
-    return {
-      points,
-      candles: normalizedCandles,
-      range,
-      source: "finnhub",
-      lastUpdated: new Date().toISOString(),
-    };
-  } catch (error) {
-    console.warn(`Failed to fetch history for ${symbol}:`, error);
-    return null;
-  }
+  // Finnhub's free tier does not include /stock/candle for most accounts —
+  // fall back to Twelve Data so charts still render real historical prices.
+  return getStockHistoryFromTwelveData(symbol, range, interval);
 }
 
 export async function getForexHistory(pair: string, range: string, interval = '1D'): Promise<AssetHistoricalSeries | null> {

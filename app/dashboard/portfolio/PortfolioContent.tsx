@@ -15,11 +15,12 @@ import {
 } from '@/lib/portfolio/actions';
 import PortfolioPageHeader from '@/components/portfolio/PortfolioPageHeader';
 import PortfolioHero from '@/components/portfolio/PortfolioHero';
-import PortfolioSummaryCards from '@/components/portfolio/PortfolioSummaryCards';
 import HoldingsTable from '@/components/portfolio/HoldingsTable';
 import AddHoldingForm from '@/components/portfolio/AddHoldingForm';
+import PortfolioEmptyState from '@/components/portfolio/PortfolioEmptyState';
+import CreatePortfolioForm from '@/components/portfolio/CreatePortfolioForm';
 import { Button } from '@/components/ui/button';
-import { Plus, Settings } from 'lucide-react';
+import { Plus, Settings, Lock } from 'lucide-react';
 import type { PortfolioValuation } from '@/lib/portfolio/valuation';
 
 interface PortfolioContentProps {
@@ -193,9 +194,10 @@ export default function PortfolioContent({
           </span>
         </div>
 
-        <div className="p-4 rounded-lg bg-[#F4B000]/5 border border-[#F4B000]/20">
+        <div className="flex items-center gap-2 p-4 rounded-lg bg-[#F4B000]/5 border border-[#F4B000]/20">
+          <Lock className="h-4 w-4 flex-shrink-0 text-[#F4B000]" />
           <p className="text-sm text-[#F4B000]">
-            🔒 Read-only simulated portfolio with $2,500,000 in simulated holdings.
+            Read-only simulated portfolio with $2,500,000 in simulated holdings.
           </p>
         </div>
 
@@ -220,14 +222,9 @@ export default function PortfolioContent({
   if (!portfolio) {
     return (
       <div className="space-y-6">
-        <PortfolioPageHeader
-          portfolio={null}
-          isDefault={false}
-          onCreatePortfolio={() => setShowCreatePortfolio(true)}
-        />
-        <div className="bg-[#1E293B] rounded-lg border border-[#1E293B] p-8 text-center">
-          <p className="text-[#A1A7B3]">No portfolio selected</p>
-          <p className="text-xs text-[#A1A7B3] mt-1">Create a new portfolio to get started</p>
+        <PortfolioPageHeader portfolio={null} isDefault={false} onCreatePortfolio={() => {}} hideCreateAction />
+        <div className="rounded-xl border border-white/[0.06] bg-[#1E293B] px-6 py-12">
+          <PortfolioEmptyState onCreatePortfolio={() => router.refresh()} />
         </div>
       </div>
     );
@@ -250,6 +247,17 @@ export default function PortfolioContent({
         <div className="p-3 rounded-lg bg-red-500/10 border border-red-500/20">
           <p className="text-sm text-red-500">{error}</p>
         </div>
+      )}
+
+      {showCreatePortfolio && (
+        <CreatePortfolioForm
+          open={showCreatePortfolio}
+          onOpenChange={setShowCreatePortfolio}
+          onSuccess={() => {
+            setShowCreatePortfolio(false);
+            handleRefresh();
+          }}
+        />
       )}
 
       <div className="flex items-center justify-between">
@@ -282,15 +290,6 @@ export default function PortfolioContent({
         holdingsCount={safeHoldings.length}
       />
 
-      <PortfolioSummaryCards
-        totalValue={totalValue}
-        holdingsValue={holdingsValue}
-        cashBalance={cashBalance}
-        unrealizedGain={totalUnrealizedGain}
-        isPositive={totalUnrealizedGain >= 0}
-        holdingsCount={safeHoldings.length}
-      />
-
       {safeHoldings.length > 0 ? (
         <div className="bg-[#1E293B] rounded-lg border border-[#1E293B] overflow-hidden">
           <div className="p-4">
@@ -312,9 +311,17 @@ export default function PortfolioContent({
           </div>
         </div>
       ) : (
-        <div className="bg-[#1E293B] rounded-lg border border-[#1E293B] p-8 text-center">
-          <p className="text-[#A1A7B3]">No holdings in this portfolio yet.</p>
-          <p className="text-xs text-[#A1A7B3] mt-1">Click "Add Holding" to get started.</p>
+        <div className="rounded-xl border border-dashed border-white/[0.1] bg-white/[0.015] px-6 py-12 text-center">
+          <p className="text-sm font-medium text-white">No holdings in this portfolio yet</p>
+          <p className="mt-1 text-xs text-[#8B93A3]">Add a stock, ETF, or crypto position to start tracking performance.</p>
+          <Button
+            onClick={() => setShowAddHolding(true)}
+            size="sm"
+            className="mt-4 bg-[#2563EB] hover:bg-[#2563EB]/90 text-white"
+          >
+            <Plus className="h-3.5 w-3.5 mr-1.5" />
+            Add Holding
+          </Button>
         </div>
       )}
     </div>

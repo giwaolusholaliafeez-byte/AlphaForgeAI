@@ -1,13 +1,11 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { usePathname } from "next/navigation";
 import { Search, Command } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import DashboardMobileNav from "./DashboardMobileNav";
 import UserMenu from "./UserMenu";
-import { cn } from "@/lib/utils";
+import GlobalSearch from "./GlobalSearch";
 import NotificationPermissionButton from "./NotificationPermissionButton";
 
 interface DashboardHeaderProps {
@@ -17,19 +15,40 @@ interface DashboardHeaderProps {
   };
 }
 
+const SECTION_LABELS: Record<string, string> = {
+  dashboard: "Overview",
+  markets: "Markets",
+  portfolio: "Portfolio",
+  intelligence: "Intelligence",
+  watchlist: "Watchlist",
+  research: "AI Research",
+  news: "News Intelligence",
+  alerts: "Alerts",
+  accounts: "Accounts",
+  activity: "Activity",
+  paper: "Paper Trading",
+  settings: "Settings",
+};
+
 export default function DashboardHeader({ user }: DashboardHeaderProps) {
   const pathname = usePathname();
-  const [isSearchFocused, setIsSearchFocused] = useState(false);
+  const [searchOpen, setSearchOpen] = useState(false);
+
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "k") {
+        e.preventDefault();
+        setSearchOpen((open) => !open);
+      }
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, []);
 
   const getPageTitle = () => {
     const segments = pathname.split("/").filter(Boolean);
     if (segments.length === 1) return "Overview";
-    return segments[1].charAt(0).toUpperCase() + segments[1].slice(1);
-  };
-
-  const handleSearch = (e: React.FormEvent) => {
-    e.preventDefault();
-    // Visual-only search for now
+    return SECTION_LABELS[segments[1]] ?? segments[1].charAt(0).toUpperCase() + segments[1].slice(1);
   };
 
   return (
@@ -45,63 +64,44 @@ export default function DashboardHeader({ user }: DashboardHeaderProps) {
           </div>
         </div>
 
-        {/* Center - Search */}
-        <div className="flex-1 max-w-sm mx-4 hidden md:block">
-          <form onSubmit={handleSearch} className="relative">
-            <div className={cn(
-              "flex items-center rounded-lg border transition-colors duration-200",
-              isSearchFocused 
-                ? "border-[#2563EB] bg-[#0B0F1A] ring-1 ring-[#2563EB]/20" 
-                : "border-white/[0.06] bg-white/[0.03]"
-            )}>
-              <Search className="absolute left-3 h-4 w-4 text-[#A1A7B3]" />
-              <Input
-                type="text"
-                placeholder="Search assets, markets, news..."
-                onFocus={() => setIsSearchFocused(true)}
-                onBlur={() => setIsSearchFocused(false)}
-                className="pl-9 pr-20 h-8 bg-transparent border-none text-white placeholder:text-[#A1A7B3] text-sm focus:ring-0 focus:outline-none"
-                aria-label="Global search"
-              />
-              <div className="absolute right-2 flex items-center space-x-1 text-[10px] text-[#A1A7B3] bg-white/[0.04] px-2 py-0.5 rounded">
-                <Command className="h-3 w-3" />
-                <span>K</span>
-              </div>
-            </div>
-          </form>
+        {/* Center - Search trigger */}
+        <div className="mx-4 hidden max-w-sm flex-1 md:block">
+          <button
+            type="button"
+            onClick={() => setSearchOpen(true)}
+            className="flex h-8 w-full items-center rounded-lg border border-white/[0.06] bg-white/[0.03] px-3 text-left text-sm text-[#5B6472] transition-colors hover:border-white/[0.1] hover:bg-white/[0.05]"
+          >
+            <Search className="h-4 w-4 flex-shrink-0" />
+            <span className="ml-2 flex-1 truncate">Search assets, markets, news…</span>
+            <span className="flex flex-shrink-0 items-center gap-0.5 rounded bg-white/[0.05] px-1.5 py-0.5 font-mono text-[10px] text-[#8B93A3]">
+              <Command className="h-2.5 w-2.5" />K
+            </span>
+          </button>
         </div>
 
         {/* Right - Actions */}
         <div className="flex items-center space-x-1 flex-shrink-0">
           <NotificationPermissionButton />
-          
+
           <div className="w-px h-5 bg-white/[0.06] mx-1" />
-          
+
           <UserMenu user={user} />
         </div>
       </div>
 
-      {/* Mobile Search */}
+      {/* Mobile Search trigger */}
       <div className="px-4 pb-3 md:hidden">
-        <form onSubmit={handleSearch} className="relative">
-          <div className={cn(
-              "flex h-10 items-center rounded-lg border transition-colors duration-200",
-            isSearchFocused 
-              ? "border-[#2563EB] bg-[#0B0F1A] ring-1 ring-[#2563EB]/20" 
-              : "border-white/[0.06] bg-white/[0.03]"
-          )}>
-            <Search className="absolute left-3 h-4 w-4 text-[#A1A7B3]" />
-            <Input
-              type="text"
-              placeholder="Search..."
-              onFocus={() => setIsSearchFocused(true)}
-              onBlur={() => setIsSearchFocused(false)}
-              className="h-10 pl-9 bg-transparent border-none text-white placeholder:text-[#A1A7B3] text-sm focus:ring-0 focus:outline-none"
-              aria-label="Global search"
-            />
-          </div>
-        </form>
+        <button
+          type="button"
+          onClick={() => setSearchOpen(true)}
+          className="flex h-10 w-full items-center rounded-lg border border-white/[0.06] bg-white/[0.03] px-3 text-left text-sm text-[#5B6472]"
+        >
+          <Search className="h-4 w-4 flex-shrink-0" />
+          <span className="ml-2">Search…</span>
+        </button>
       </div>
+
+      <GlobalSearch open={searchOpen} onOpenChange={setSearchOpen} />
     </header>
   );
 }

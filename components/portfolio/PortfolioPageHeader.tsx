@@ -20,6 +20,7 @@ interface PortfolioPageHeaderProps {
   onSetDefault?: () => void;
   onDelete?: () => void;
   className?: string;
+  hideCreateAction?: boolean;
 }
 
 export default function PortfolioPageHeader({
@@ -31,18 +32,21 @@ export default function PortfolioPageHeader({
   onSetDefault,
   onDelete,
   className,
+  hideCreateAction,
 }: PortfolioPageHeaderProps) {
   if (!portfolio) {
     return (
       <div className={cn("flex items-center justify-between", className)}>
         <div>
-          <h1 className="text-xl font-semibold text-white">Portfolio</h1>
+          <h1 className="text-page-title text-white">Portfolio</h1>
           <p className="text-sm text-[#A1A7B3]">Create your first portfolio to get started</p>
         </div>
-        <Button onClick={onCreatePortfolio} className="bg-[#2563EB] hover:bg-[#2563EB]/90 text-white">
-          <Plus className="h-4 w-4 mr-2" />
-          Create Portfolio
-        </Button>
+        {!hideCreateAction && (
+          <Button onClick={onCreatePortfolio} className="bg-[#2563EB] hover:bg-[#2563EB]/90 text-white">
+            <Plus className="h-4 w-4 mr-2" />
+            Create Portfolio
+          </Button>
+        )}
       </div>
     );
   }
