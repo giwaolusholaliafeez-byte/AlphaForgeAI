@@ -1,10 +1,11 @@
-import { 
-  StockDetail, 
-  CryptoDetail, 
+import {
+  StockDetail,
+  CryptoDetail,
+  ForexDetail,
   AssetDetail,
   AssetDetailResponse,
   RecommendationTrend,
-  AssetNewsItem 
+  AssetNewsItem
 } from './types';
 import { FinnhubClient } from './finnhub';
 import { CoinGeckoClient } from './coingecko';
@@ -212,9 +213,14 @@ export async function getAssetDetail(type: string, id: string): Promise<AssetDet
       const pair = identity.displaySymbol;
       const twelveKey = process.env.TWELVE_DATA_API_KEY;
       const twelveQuote = twelveKey ? await new TwelveDataClient(twelveKey).getQuote(pair).catch(() => null) : null;
-      const quote = twelveQuote?.price && Number.isFinite(Number(twelveQuote.price)) ? { id: identity.assetId, pair, base: pair.slice(0, 3), quote: pair.slice(4), price: Number(twelveQuote.price), change: twelveQuote.change ? Number(twelveQuote.change) : null, changePercent: twelveQuote.percent_change ? Number(twelveQuote.percent_change) : null, previousClose: twelveQuote.previous_close ? Number(twelveQuote.previous_close) : null, currency: pair.slice(4), source: 'twelvedata', lastUpdated: twelveQuote.timestamp ? new Date(twelveQuote.timestamp * 1000).toISOString() : new Date().toISOString(), exchange: twelveQuote.exchange ?? 'Forex' } : (await new ForexClient().getRates()).get(identity.assetId);
+      const hasTwelveQuote = Boolean(twelveQuote?.price && Number.isFinite(Number(twelveQuote.price)));
+      const quote = hasTwelveQuote ? { id: identity.assetId, pair, base: pair.slice(0, 3), quote: pair.slice(4), price: Number(twelveQuote!.price), change: twelveQuote!.change ? Number(twelveQuote!.change) : null, changePercent: twelveQuote!.percent_change ? Number(twelveQuote!.percent_change) : null, previousClose: twelveQuote!.previous_close ? Number(twelveQuote!.previous_close) : null, currency: pair.slice(4), source: 'twelvedata', lastUpdated: twelveQuote!.timestamp ? new Date(twelveQuote!.timestamp * 1000).toISOString() : new Date().toISOString(), exchange: twelveQuote!.exchange ?? 'Forex' } : (await new ForexClient().getRates()).get(identity.assetId);
       if (!quote) return { data: null, error: `No data available for ${id}`, source: 'frankfurter', lastUpdated: null, isDelayed: true, isConfigured: true };
-      return { data: { id: identity.assetId, symbol: quote.pair, name: quote.pair, type: 'fx', price: quote.price, change: quote.change, changePercent: quote.changePercent, currency: quote.currency, marketCap: null, volume: null, logo: null, exchange: quote.exchange, lastUpdated: quote.lastUpdated, source: quote.source, description: null, website: null, industry: 'Foreign exchange', country: null }, error: null, source: quote.source, lastUpdated: quote.lastUpdated, isDelayed: true, isConfigured: true };
+      const open = hasTwelveQuote && twelveQuote!.open ? Number(twelveQuote!.open) : null;
+      const dayHigh = hasTwelveQuote && twelveQuote!.high ? Number(twelveQuote!.high) : null;
+      const dayLow = hasTwelveQuote && twelveQuote!.low ? Number(twelveQuote!.low) : null;
+      const detail: ForexDetail = { id: identity.assetId, symbol: quote.pair, name: quote.pair, type: 'fx', price: quote.price, change: quote.change, changePercent: quote.changePercent, currency: quote.currency, marketCap: null, volume: null, logo: null, exchange: quote.exchange, lastUpdated: quote.lastUpdated, source: quote.source, description: null, website: null, industry: 'Foreign exchange', country: null, baseCurrency: quote.base, quoteCurrency: quote.quote, previousClose: quote.previousClose, open: Number.isFinite(open) ? open : null, dayHigh: Number.isFinite(dayHigh) ? dayHigh : null, dayLow: Number.isFinite(dayLow) ? dayLow : null, bid: null, ask: null };
+      return { data: detail, error: null, source: quote.source, lastUpdated: quote.lastUpdated, isDelayed: true, isConfigured: true };
     } catch (error) { return { data: null, error: error instanceof Error ? error.message : 'Failed to fetch forex data', source: 'frankfurter', lastUpdated: null, isDelayed: true, isConfigured: true }; }
   }
   

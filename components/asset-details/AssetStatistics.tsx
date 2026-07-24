@@ -1,4 +1,4 @@
-import { AssetDetail, StockDetail, CryptoDetail } from "@/lib/market-data/types";
+import { AssetDetail, StockDetail, CryptoDetail, ForexDetail } from "@/lib/market-data/types";
 import { formatPrice, formatMarketCap, formatVolume } from "@/lib/market-data/normalizers";
 
 interface AssetStatisticsProps {
@@ -9,6 +9,7 @@ export default function AssetStatistics({ asset }: AssetStatisticsProps) {
   const isStock = asset.type === "stock" || asset.type === "etf";
   const stock = asset as StockDetail;
   const crypto = asset as CryptoDetail;
+  const fx = asset as ForexDetail;
 
   const stats = [];
 
@@ -20,7 +21,14 @@ export default function AssetStatistics({ asset }: AssetStatisticsProps) {
     stats.push({ label: "24h Volume", value: formatVolume(asset.volume) });
   }
 
-  if (isStock) {
+  if (asset.type === "fx") {
+    if (fx.open) stats.push({ label: "Open", value: formatPrice(fx.open) });
+    if (fx.dayHigh) stats.push({ label: "Day High", value: formatPrice(fx.dayHigh) });
+    if (fx.dayLow) stats.push({ label: "Day Low", value: formatPrice(fx.dayLow) });
+    if (fx.previousClose) stats.push({ label: "Previous Close", value: formatPrice(fx.previousClose) });
+    if (fx.bid) stats.push({ label: "Bid", value: formatPrice(fx.bid) });
+    if (fx.ask) stats.push({ label: "Ask", value: formatPrice(fx.ask) });
+  } else if (isStock) {
     if (stock.previousClose) stats.push({ label: "Previous Close", value: formatPrice(stock.previousClose) });
     if (stock.open) stats.push({ label: "Open", value: formatPrice(stock.open) });
     if (stock.dayHigh) stats.push({ label: "Day High", value: formatPrice(stock.dayHigh) });

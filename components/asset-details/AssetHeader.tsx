@@ -32,11 +32,11 @@ export default function AssetHeader({ asset, onBack }: AssetHeaderProps) {
           Markets
         </Link>
         <span>/</span>
-        <Link 
-          href={`/dashboard/markets?type=${asset.type === 'etf' ? 'etfs' : asset.type === 'crypto' ? 'crypto' : 'stocks'}`}
+        <Link
+          href={`/dashboard/markets?type=${asset.type === 'etf' ? 'etfs' : asset.type === 'crypto' ? 'crypto' : asset.type === 'fx' ? 'fx' : 'stocks'}`}
           className="hover:text-white transition-colors"
         >
-          {asset.type === 'etf' ? 'ETFs' : asset.type === 'crypto' ? 'Crypto' : 'Stocks'}
+          {asset.type === 'etf' ? 'ETFs' : asset.type === 'crypto' ? 'Crypto' : asset.type === 'fx' ? 'Forex' : 'Stocks'}
         </Link>
         <span>/</span>
         <span className="text-white">{asset.symbol}</span>

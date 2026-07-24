@@ -2,29 +2,23 @@ import { NextResponse } from 'next/server';
 import { CoinGeckoClient } from '@/lib/market-data/coingecko';
 import { CryptoAsset, MarketDataError } from '@/lib/market-data/types';
 
-const CRYPTO_UNIVERSE = [
-  'bitcoin', 
-  'ethereum', 
-  'solana', 
-  'binancecoin', 
-  'ripple',
-  'cardano', 
-  'dogecoin', 
-  'avalanche-2', 
-  'chainlink', 
-  'polkadot'
-];
+const DEFAULT_PAGE_SIZE = 25;
+const MAX_PAGE_SIZE = 50;
 
-export async function GET() {
+export async function GET(request: Request) {
+  const { searchParams } = new URL(request.url);
+  const page = Math.max(1, Number(searchParams.get('page')) || 1);
+  const pageSize = Math.min(MAX_PAGE_SIZE, Math.max(1, Number(searchParams.get('pageSize')) || DEFAULT_PAGE_SIZE));
+
   try {
     const client = new CoinGeckoClient();
-    
+
     try {
-      const marketData = await client.getMarketData(CRYPTO_UNIVERSE);
-      
+      const marketData = await client.getTopMarkets(page, pageSize);
+
       if (!Array.isArray(marketData)) {
         return NextResponse.json(
-          { 
+          {
             data: [],
             error: {
               code: 'COINGECKO_INVALID_RESPONSE',
@@ -48,15 +42,18 @@ export async function GET() {
         source: 'CoinGecko Keyless API',
         lastUpdated: new Date().toISOString(),
         isConfigured: true,
+        page,
+        pageSize,
+        hasMore: assets.length === pageSize,
       });
-      
+
     } catch (error) {
       const err = error as MarketDataError;
-      
+
       let statusCode = 500;
       let errorCode = err.code || 'COINGECKO_ERROR';
       let errorMessage = err.message || 'Failed to fetch crypto data';
-      
+
       if (err.code === 'COINGECKO_429') {
         statusCode = 429;
         errorCode = 'COINGECKO_RATE_LIMIT';
@@ -76,7 +73,7 @@ export async function GET() {
       }
 
       return NextResponse.json(
-        { 
+        {
           data: [],
           error: {
             code: errorCode,
@@ -89,10 +86,10 @@ export async function GET() {
         { status: statusCode }
       );
     }
-    
+
   } catch (error) {
     return NextResponse.json(
-      { 
+      {
         data: [],
         error: {
           code: 'COINGECKO_ERROR',

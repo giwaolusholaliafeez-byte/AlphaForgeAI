@@ -174,6 +174,18 @@ export interface StockDetail extends AssetDetail {
   inceptionDate?: string | null;
 }
 
+export interface ForexDetail extends AssetDetail {
+  type: 'fx';
+  baseCurrency: string;
+  quoteCurrency: string;
+  previousClose?: number | null;
+  open?: number | null;
+  dayHigh?: number | null;
+  dayLow?: number | null;
+  bid?: number | null;
+  ask?: number | null;
+}
+
 export interface CryptoDetail extends AssetDetail {
   type: 'crypto';
   fullyDilutedValuation: number | null;

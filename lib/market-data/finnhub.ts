@@ -11,7 +11,7 @@ export class FinnhubClient {
     this.baseUrl = FINNHUB_BASE_URL;
   }
 
-  private async fetch<T>(endpoint: string, params?: Record<string, string>): Promise<T> {
+  private async fetch<T>(endpoint: string, params?: Record<string, string>, revalidateSeconds = 60): Promise<T> {
     const url = new URL(`${this.baseUrl}${endpoint}`);
     url.searchParams.append("token", this.apiKey);
 
@@ -30,7 +30,7 @@ export class FinnhubClient {
           Accept: "application/json",
         },
         signal: controller.signal,
-        next: { revalidate: 60 },
+        next: { revalidate: revalidateSeconds },
       });
 
       clearTimeout(timeoutId);
@@ -75,6 +75,24 @@ export class FinnhubClient {
 
   async getProfile(symbol: string): Promise<FinnhubProfile> {
     return this.fetch<FinnhubProfile>("/stock/profile2", { symbol });
+  }
+
+  /**
+   * Full US-listed symbol universe (~30k entries, no live prices). Cached for
+   * 6 hours since this list changes rarely — used to back provider-backed
+   * pagination/browsing instead of a hardcoded symbol array.
+   */
+  async getUsSymbols(): Promise<Array<{ symbol: string; description: string; type: string }>> {
+    const raw = await this.fetch<Array<{ symbol?: string; description?: string; type?: string; displaySymbol?: string }>>(
+      "/stock/symbol",
+      { exchange: "US" },
+      21600
+    );
+    return raw
+      .filter((item): item is { symbol: string; description: string; type: string } =>
+        Boolean(item.symbol && item.description && item.type) && /^[A-Z]{1,5}$/.test(item.symbol as string)
+      )
+      .map((item) => ({ symbol: item.symbol, description: item.description, type: item.type }));
   }
 
   async getCompanyNews(symbol: string, from: string, to: string): Promise<AssetNewsItem[]> {
@@ -153,17 +171,18 @@ export class FinnhubClient {
     });
   }
 
-  normalizeQuote(symbol: string, quote: FinnhubQuote, profile?: FinnhubProfile): StockAsset {
+  normalizeQuote(symbol: string, quote: FinnhubQuote, profile?: FinnhubProfile, typeOverride?: "stock" | "etf", nameOverride?: string): StockAsset {
     const now = new Date().toISOString();
 
     return {
       id: symbol,
       symbol: symbol,
-      name: profile?.name || symbol,
+      name: nameOverride || profile?.name || symbol,
       type:
-        symbol.startsWith("SPY") || symbol.startsWith("QQQ") || symbol.startsWith("DIA") || symbol.startsWith("VOO")
+        typeOverride ??
+        (symbol.startsWith("SPY") || symbol.startsWith("QQQ") || symbol.startsWith("DIA") || symbol.startsWith("VOO")
           ? "etf"
-          : "stock",
+          : "stock"),
       price: quote.c || null,
       change: quote.d || null,
       changePercent: quote.dp || null,

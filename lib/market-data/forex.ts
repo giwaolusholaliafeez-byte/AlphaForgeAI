@@ -39,6 +39,9 @@ const CURRENCY_PAIRS = [
   { id: 'eur_gbp', base: 'EUR', quote: 'GBP', display: 'EUR/GBP' },
   { id: 'eur_jpy', base: 'EUR', quote: 'JPY', display: 'EUR/JPY' },
   { id: 'gbp_jpy', base: 'GBP', quote: 'JPY', display: 'GBP/JPY' },
+  { id: 'gbp_chf', base: 'GBP', quote: 'CHF', display: 'GBP/CHF' },
+  { id: 'aud_jpy', base: 'AUD', quote: 'JPY', display: 'AUD/JPY' },
+  { id: 'cad_jpy', base: 'CAD', quote: 'JPY', display: 'CAD/JPY' },
 ];
 
 // Currencies needed for calculations

@@ -87,6 +87,24 @@ export class CoinGeckoClient {
     return this.fetch<CoinGeckoMarketData[]>('/coins/markets', params);
   }
 
+  /**
+   * Provider-backed crypto universe browsing by global market cap rank —
+   * not limited to a fixed coin-id allowlist. Real CoinGecko pagination.
+   */
+  async getTopMarkets(page: number, perPage: number): Promise<CoinGeckoMarketData[]> {
+    const params = {
+      vs_currency: 'usd',
+      order: 'market_cap_desc',
+      per_page: String(perPage),
+      page: String(page),
+      sparkline: 'true',
+      price_change_percentage: '1h,24h,7d',
+      locale: 'en',
+    };
+
+    return this.fetch<CoinGeckoMarketData[]>('/coins/markets', params);
+  }
+
   async search(query: string): Promise<MarketSearchResult[]> {
     const params = {
       query: query,

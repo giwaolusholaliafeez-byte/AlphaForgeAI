@@ -4,6 +4,7 @@ import { CoinGeckoClient } from '@/lib/market-data/coingecko';
 import { MarketSearchResult, MarketDataError } from '@/lib/market-data/types';
 import { TwelveDataClient } from '@/lib/market-data/twelve-data';
 import { CURRENCY_PAIRS } from '@/lib/market-data/forex';
+import { classifyTwelveDataInstrument } from '@/lib/market-data/search-classify';
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
@@ -71,15 +72,18 @@ export async function GET(request: Request) {
     CURRENCY_PAIRS.filter((pair) => pair.id.replace('_', '').includes(normalized) || pair.display.toLowerCase().includes(query.toLowerCase())).slice(0, 10).forEach((pair) => results.push({ id: pair.id.replace('_', ''), symbol: pair.display, name: `${pair.base}/${pair.quote} foreign exchange`, type: 'fx', source: 'frankfurter' }));
   }
 
+  // Twelve Data's symbol search also returns instrument types we don't
+  // support trading/tracking (warrants, physical-currency duplicates of the
+  // FX pairs already sourced from CURRENCY_PAIRS above, trusts, etc). Only
+  // surface types we can actually resolve to a supported asset class.
   const twelveKey = process.env.TWELVE_DATA_API_KEY;
-  if ((type === 'all' || type === 'stock' || type === 'etf' || type === 'fx') && twelveKey) {
+  if ((type === 'all' || type === 'stock' || type === 'etf') && twelveKey) {
     try {
       const response = await new TwelveDataClient(twelveKey).search(query);
       response.data.slice(0, 10).forEach((item) => {
-        const isFx = item.instrument_type.toLowerCase().includes('forex');
-        const isEtf = item.instrument_type.toLowerCase().includes('etf');
-        const assetType = isFx ? 'fx' : isEtf ? 'etf' : 'stock';
-        if (type === 'all' || type === assetType) results.push({ id: isFx ? item.symbol.replace('/', '').toLowerCase() : item.symbol, symbol: item.symbol, name: item.name, type: assetType, exchange: item.exchange, source: 'twelvedata' });
+        const assetType = classifyTwelveDataInstrument(item.instrument_type);
+        if (!assetType) return;
+        if (type === 'all' || type === assetType) results.push({ id: item.symbol, symbol: item.symbol, name: item.name, type: assetType, exchange: item.exchange, source: 'twelvedata' });
       });
     } catch (error) { console.warn('Twelve Data search failed:', error); }
   }

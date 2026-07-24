@@ -1,4 +1,4 @@
-import { AssetDetail, StockDetail, CryptoDetail } from "@/lib/market-data/types";
+import { AssetDetail, StockDetail, CryptoDetail, ForexDetail } from "@/lib/market-data/types";
 
 interface AssetOverviewProps {
   asset: AssetDetail;
@@ -8,10 +8,16 @@ export default function AssetOverview({ asset }: AssetOverviewProps) {
   const isStock = asset.type === 'stock' || asset.type === 'etf';
   const stock = asset as StockDetail;
   const crypto = asset as CryptoDetail;
+  const fx = asset as ForexDetail;
 
   const details = [];
 
-  if (isStock) {
+  if (asset.type === 'fx') {
+    details.push({ label: 'Base currency', value: fx.baseCurrency });
+    details.push({ label: 'Quote currency', value: fx.quoteCurrency });
+    details.push({ label: 'Market', value: fx.exchange ?? 'Foreign exchange' });
+    details.push({ label: 'Data source', value: fx.source === 'twelvedata' ? 'Twelve Data (intraday)' : 'Frankfurter (daily reference rate)' });
+  } else if (isStock) {
     if (stock.industry) details.push({ label: 'Industry', value: stock.industry });
     if (stock.country) details.push({ label: 'Country', value: stock.country });
     if (stock.exchange) details.push({ label: 'Exchange', value: stock.exchange });

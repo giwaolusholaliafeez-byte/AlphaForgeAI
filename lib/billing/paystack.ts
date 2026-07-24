@@ -18,6 +18,22 @@ export class PaystackProvider implements BillingProvider {
     return { authorizationUrl: payload.data.authorization_url, reference: payload.data.reference };
   }
 
+  async getPlan(planCode: string): Promise<{ name: string; amount: number; interval: string; currency: string } | null> {
+    try {
+      const response = await fetch(`${PAYSTACK_URL}/plan/${encodeURIComponent(planCode)}`, {
+        headers: { Authorization: `Bearer ${secretKey()}` },
+        next: { revalidate: 3600 },
+      });
+      const payload: unknown = await response.json();
+      if (!response.ok || !isRecord(payload) || !isRecord(payload.data)) return null;
+      const { name, amount, interval, currency } = payload.data;
+      if (typeof amount !== 'number' || typeof name !== 'string' || typeof interval !== 'string' || typeof currency !== 'string') return null;
+      return { name, amount, interval, currency };
+    } catch {
+      return null;
+    }
+  }
+
   async verifyTransaction(reference: string) {
     const response = await fetch(`${PAYSTACK_URL}/transaction/verify/${encodeURIComponent(reference)}`, { headers: { Authorization: `Bearer ${secretKey()}` } });
     const payload: unknown = await response.json();

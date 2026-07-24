@@ -1,6 +1,6 @@
 import { notFound } from "next/navigation";
 import { getAssetDetail } from "@/lib/market-data/asset-details";
-import { validateAssetType, validateStockSymbol, validateCryptoId, validateForexPair } from "@/lib/market-data/asset-validation";
+import { isValidAssetRoute } from "@/lib/market-data/asset-validation";
 import AssetHeader from "@/components/asset-details/AssetHeader";
 import AssetPrice from "@/components/asset-details/AssetPrice";
 import AssetChart from "@/components/asset-details/AssetChart";
@@ -22,23 +22,7 @@ type AssetPageProps = {
 export default async function AssetPage({ params }: AssetPageProps) {
   const { assetType, assetId } = await params;
 
-  // Validate asset type
-  if (!validateAssetType(assetType)) {
-    notFound();
-  }
-
-  // Validate asset ID based on type
-  if (assetType === "stock" || assetType === "etf") {
-    if (!validateStockSymbol(assetId)) {
-      notFound();
-    }
-  } else if (assetType === "crypto") {
-    if (!validateCryptoId(assetId)) {
-      notFound();
-    }
-  } else if (assetType === "fx" && !validateForexPair(assetId)) {
-    notFound();
-  } else {
+  if (!isValidAssetRoute(assetType, assetId)) {
     notFound();
   }
 

@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { getAssetDetail } from '@/lib/market-data/asset-details';
-import { validateAssetType, validateStockSymbol, validateCryptoId, validateForexPair } from '@/lib/market-data/asset-validation';
+import { isValidAssetRoute } from '@/lib/market-data/asset-validation';
 
 type AssetRouteParams = {
   assetType: string;
@@ -13,31 +13,11 @@ export async function GET(
 ) {
   const { assetType, assetId } = await params;
 
-  // Validate asset type
-  if (!validateAssetType(assetType)) {
+  if (!isValidAssetRoute(assetType, assetId)) {
     return NextResponse.json(
-      { error: 'Invalid asset type', code: 'INVALID_TYPE' },
+      { error: 'Invalid asset type or identifier', code: 'INVALID_ASSET' },
       { status: 400 }
     );
-  }
-
-  // Validate asset ID based on type
-  if (assetType === 'stock' || assetType === 'etf') {
-    if (!validateStockSymbol(assetId)) {
-      return NextResponse.json(
-        { error: 'Invalid stock symbol', code: 'INVALID_SYMBOL' },
-        { status: 400 }
-      );
-    }
-  } else if (assetType === 'crypto') {
-    if (!validateCryptoId(assetId)) {
-      return NextResponse.json(
-        { error: 'Invalid cryptocurrency ID', code: 'INVALID_ID' },
-        { status: 400 }
-      );
-    }
-  } else if (assetType === 'fx' && !validateForexPair(assetId)) {
-    return NextResponse.json({ error: 'Invalid forex pair', code: 'INVALID_PAIR' }, { status: 400 });
   }
 
   const result = await getAssetDetail(assetType, assetId);
