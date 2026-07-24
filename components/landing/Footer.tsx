@@ -2,18 +2,18 @@ import Link from "next/link";
 import Image from "next/image";
 import { Separator } from "@/components/ui/separator";
 
-const footerLinks = {
-  product: ["Markets", "Research", "Pricing", "Demo"],
-  company: ["About", "Blog", "Careers", "Contact"],
-  legal: ["Privacy", "Terms", "Risk Disclosure"],
-};
+const productLinks = [
+  { label: "Platform", href: "#platform" },
+  { label: "Markets & Copilot", href: "#showcase" },
+  { label: "Pricing", href: "/pricing" },
+];
 
 export default function Footer() {
   return (
     <footer className="border-t border-[#1E293B] bg-[#0B0F1A]">
       <div className="container py-12">
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
-          <div className="col-span-1 md:col-span-1">
+        <div className="grid grid-cols-1 gap-8 md:grid-cols-3">
+          <div>
             <Link href="/" className="flex items-center space-x-3">
               <Image
                 src="/alphaforge-icon.png"
@@ -36,13 +36,13 @@ export default function Footer() {
           <div>
             <h4 className="text-sm font-medium mb-3 text-white">Product</h4>
             <ul className="space-y-2">
-              {footerLinks.product.map((link) => (
-                <li key={link}>
+              {productLinks.map((link) => (
+                <li key={link.label}>
                   <Link
-                    href={`#${link.toLowerCase()}`}
+                    href={link.href}
                     className="text-xs text-[#A1A7B3] hover:text-white transition-colors"
                   >
-                    {link}
+                    {link.label}
                   </Link>
                 </li>
               ))}
@@ -50,34 +50,23 @@ export default function Footer() {
           </div>
 
           <div>
-            <h4 className="text-sm font-medium mb-3 text-white">Company</h4>
+            <h4 className="text-sm font-medium mb-3 text-white">Account</h4>
             <ul className="space-y-2">
-              {footerLinks.company.map((link) => (
-                <li key={link}>
-                  <Link
-                    href={`#${link.toLowerCase()}`}
-                    className="text-xs text-[#A1A7B3] hover:text-white transition-colors"
-                  >
-                    {link}
-                  </Link>
-                </li>
-              ))}
-            </ul>
-          </div>
-
-          <div>
-            <h4 className="text-sm font-medium mb-3 text-white">Legal</h4>
-            <ul className="space-y-2">
-              {footerLinks.legal.map((link) => (
-                <li key={link}>
-                  <Link
-                    href={`#${link.toLowerCase().replace(" ", "-")}`}
-                    className="text-xs text-[#A1A7B3] hover:text-white transition-colors"
-                  >
-                    {link}
-                  </Link>
-                </li>
-              ))}
+              <li>
+                <Link href="/sign-in" className="text-xs text-[#A1A7B3] hover:text-white transition-colors">
+                  Sign In
+                </Link>
+              </li>
+              <li>
+                <Link href="/sign-up" className="text-xs text-[#A1A7B3] hover:text-white transition-colors">
+                  Get Started
+                </Link>
+              </li>
+              <li>
+                <a href="mailto:support@alphaforge.ai" className="text-xs text-[#A1A7B3] hover:text-white transition-colors">
+                  Contact
+                </a>
+              </li>
             </ul>
           </div>
         </div>
@@ -89,8 +78,8 @@ export default function Footer() {
             © {new Date().getFullYear()} AlphaForge AI. All rights reserved.
           </p>
           <p className="text-xs text-[#A1A7B3] text-center max-w-2xl">
-            <span className="text-white font-medium">Risk Disclosure:</span> AlphaForge AI provides research tools and information 
-            and does not provide financial advice. Always consult with a qualified financial advisor before making 
+            <span className="text-white font-medium">Risk Disclosure:</span> AlphaForge AI provides research tools and information
+            and does not provide financial advice. Always consult with a qualified financial advisor before making
             investment decisions.
           </p>
         </div>

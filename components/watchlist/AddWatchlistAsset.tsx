@@ -10,7 +10,7 @@ interface SearchResult {
   id: string;
   symbol: string;
   name: string;
-  type: "stock" | "etf" | "crypto";
+  type: "stock" | "etf" | "crypto" | "fx";
   source: string;
 }
 
@@ -114,6 +114,7 @@ export default function AddWatchlistAsset({
     stock: "Stock",
     etf: "ETF",
     crypto: "Crypto",
+    fx: "Forex",
   };
 
   return (

@@ -9,17 +9,16 @@ import { Label } from "@/components/ui/label";
 interface CreateAlertFormProps {
   onCancel: () => void;
   onCreate: (data: any) => Promise<void>;
+  initialAsset?: string;
 }
 
 const CONDITIONS = [
   { value: "above", label: "Price Above" },
   { value: "below", label: "Price Below" },
-  { value: "increase", label: "Percentage Increase" },
-  { value: "decrease", label: "Percentage Decrease" },
 ];
 
-export default function CreateAlertForm({ onCancel, onCreate }: CreateAlertFormProps) {
-  const [asset, setAsset] = useState("");
+export default function CreateAlertForm({ onCancel, onCreate, initialAsset = "" }: CreateAlertFormProps) {
+  const [asset, setAsset] = useState(initialAsset);
   const [condition, setCondition] = useState("above");
   const [target, setTarget] = useState("");
   const [isLoading, setIsLoading] = useState(false);

@@ -4,6 +4,8 @@ import { CoinGeckoClient } from "./coingecko";
 import { ForexClient } from './forex';
 import { normalizeAssetIdentity } from './identity';
 import { TwelveDataClient } from './twelve-data';
+import { normalizeCoinGeckoOhlc } from './candles';
+export { normalizeCoinGeckoOhlc } from './candles';
 
 export interface HistoryRange {
   label: string;
@@ -124,6 +126,10 @@ export async function getCryptoHistory(
     if (range === "MAX") days = "max";
     else if (days > 365) days = "max";
 
+    const ohlcDays = range === 'MAX' ? 'max' : days;
+    const ohlc = await client.getOhlc(coinId, ohlcDays as any).catch(() => []);
+    const normalizedCandles = normalizeCoinGeckoOhlc(ohlc);
+    if (normalizedCandles.length) return { points: normalizedCandles.map((candle) => ({ timestamp: candle.timestamp, value: candle.close })), candles: normalizedCandles, range, source: 'coingecko', lastUpdated: new Date().toISOString() };
     const data = await client.getMarketChart(coinId, days as any);
 
     if (!data || !data.prices || data.prices.length === 0) {

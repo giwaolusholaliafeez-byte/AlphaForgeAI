@@ -104,9 +104,9 @@ export default function Navigation() {
                       Sign In
                     </Button>
                   </Link>
-                  <Link href="#product-preview">
+                  <Link href="/sign-up">
                     <Button size="sm" className="bg-[#2563EB] hover:bg-[#2563EB]/90 text-white">
-                      Start Researching
+                      Get Started
                     </Button>
                   </Link>
                 </>
@@ -179,9 +179,9 @@ export default function Navigation() {
                               Sign In
                             </Button>
                           </Link>
-                          <Link href="#product-preview" onClick={() => setIsOpen(false)}>
+                          <Link href="/sign-up" onClick={() => setIsOpen(false)}>
                             <Button className="w-full bg-[#2563EB] hover:bg-[#2563EB]/90 text-white">
-                              Start Researching
+                              Get Started
                             </Button>
                           </Link>
                         </>

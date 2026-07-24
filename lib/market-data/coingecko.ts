@@ -116,6 +116,10 @@ export class CoinGeckoClient {
     return this.fetch<any>(`/coins/${coinId}/market_chart`, params);
   }
 
+  async getOhlc(coinId: string, days: number | string): Promise<Array<[number, number, number, number, number]>> {
+    return this.fetch<Array<[number, number, number, number, number]>>(`/coins/${coinId}/ohlc`, { vs_currency: 'usd', days: days.toString() });
+  }
+
   normalizeAsset(data: CoinGeckoMarketData): CryptoAsset {
     const now = new Date().toISOString();
     

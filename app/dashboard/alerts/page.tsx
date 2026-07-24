@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useSearchParams } from "next/navigation";
 import { useRouter } from "next/navigation";
 import AlertsPageHeader from "@/components/alerts/AlertsPageHeader";
 import AlertsTable from "@/components/alerts/AlertsTable";
@@ -9,6 +10,7 @@ import { AlertItem } from "@/components/alerts/AlertsTable";
 
 export default function AlertsPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [alerts, setAlerts] = useState<AlertItem[]>([]);
   const [showCreateForm, setShowCreateForm] = useState(false);
 
@@ -52,6 +54,7 @@ export default function AlertsPage() {
         <CreateAlertForm
           onCancel={() => setShowCreateForm(false)}
           onCreate={handleCreate}
+          initialAsset={searchParams.get("symbol") ?? searchParams.get("assetId") ?? ""}
         />
       )}
 

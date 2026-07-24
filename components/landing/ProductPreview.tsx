@@ -34,27 +34,28 @@ export default function ProductPreview() {
   const { indices, portfolio, aiSummary, news, watchlist } = marketOverview;
 
   return (
-    <section id="product-preview" className="py-20 bg-[#1E293B]/30">
+    <section id="platform" className="py-20 sm:py-28 bg-[#0E1420]">
       <div className="container">
         <motion.div
-          initial={{ opacity: 0, y: 20 }}
+          initial={{ opacity: 0, y: 16 }}
           whileInView={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6 }}
+          transition={{ duration: 0.5 }}
           viewport={{ once: true }}
-          className="text-center mb-12"
+          className="mx-auto mb-12 max-w-2xl text-center"
         >
-          <h2 className="text-3xl md:text-4xl font-bold mb-4 text-white">
-            Your financial intelligence workspace
+          <h2 className="text-3xl font-semibold tracking-tight text-white md:text-4xl">
+            Everything visible, nothing buried
           </h2>
-          <p className="text-[#A1A7B3] max-w-2xl mx-auto">
-            A comprehensive dashboard combining real-time market data, AI analysis, and portfolio monitoring
+          <p className="mt-4 text-[#A1A7B3]">
+            Indices, portfolio health, watchlist moves, and AI context in one screen —
+            the same layout you get inside the real dashboard.
           </p>
         </motion.div>
 
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6, delay: 0.2 }}
+          transition={{ duration: 0.6, delay: 0.1 }}
           viewport={{ once: true }}
           className="grid grid-cols-1 lg:grid-cols-3 gap-4"
         >
@@ -73,8 +74,8 @@ export default function ProductPreview() {
                   {indices.map((index) => (
                     <div key={index.name} className="p-3 rounded-lg bg-[#0B0F1A]/50">
                       <p className="text-xs text-[#A1A7B3]">{index.name}</p>
-                      <p className="text-sm font-semibold text-white">{index.value}</p>
-                      <span className={`text-xs ${index.positive ? 'text-green-500' : 'text-red-500'} flex items-center`}>
+                      <p className="text-sm font-semibold text-white font-mono">{index.value}</p>
+                      <span className={`text-xs ${index.positive ? "text-[#00C2A8]" : "text-red-400"} flex items-center`}>
                         {index.positive ? <TrendingUp className="h-3 w-3 mr-1" /> : <TrendingDown className="h-3 w-3 mr-1" />}
                         {index.change}
                       </span>
@@ -86,11 +87,11 @@ export default function ProductPreview() {
                   <ResponsiveContainer width="100%" height="100%">
                     <LineChart data={chartData}>
                       <CartesianGrid strokeDasharray="3 3" stroke="#1E293B" />
-                      <XAxis dataKey="time" tick={{ fill: '#A1A7B3', fontSize: 10 }} />
-                      <YAxis domain={['dataMin - 5', 'dataMax + 5']} tick={{ fill: '#A1A7B3', fontSize: 10 }} />
+                      <XAxis dataKey="time" tick={{ fill: "#A1A7B3", fontSize: 10 }} />
+                      <YAxis domain={["dataMin - 5", "dataMax + 5"]} tick={{ fill: "#A1A7B3", fontSize: 10 }} />
                       <Tooltip
-                        contentStyle={{ backgroundColor: '#1E293B', border: '1px solid #1E293B' }}
-                        labelStyle={{ color: '#fff' }}
+                        contentStyle={{ backgroundColor: "#1E293B", border: "1px solid #1E293B" }}
+                        labelStyle={{ color: "#fff" }}
                       />
                       <Line
                         type="monotone"
@@ -147,8 +148,8 @@ export default function ProductPreview() {
               <CardContent>
                 <div className="flex items-center justify-between mb-2">
                   <div>
-                    <p className="text-2xl font-bold text-[#F4B000]">{portfolio.totalValue}</p>
-                    <span className={`text-sm ${portfolio.positive ? 'text-green-500' : 'text-red-500'} flex items-center`}>
+                    <p className="text-2xl font-bold text-[#F4B000] font-mono">{portfolio.totalValue}</p>
+                    <span className={`text-sm ${portfolio.positive ? "text-[#00C2A8]" : "text-red-400"} flex items-center`}>
                       {portfolio.positive ? <ArrowUp className="h-3 w-3 mr-1" /> : <ArrowDown className="h-3 w-3 mr-1" />}
                       {portfolio.dailyChange} ({portfolio.dailyChangePercent})
                     </span>
@@ -159,11 +160,11 @@ export default function ProductPreview() {
                 <div className="space-y-1">
                   <div className="flex justify-between text-xs">
                     <span className="text-[#A1A7B3]">Positions</span>
-                    <span className="font-medium text-white">24</span>
+                    <span className="font-medium text-white font-mono">24</span>
                   </div>
                   <div className="flex justify-between text-xs">
-                    <span className="text-[#A1A7B3]">Today's P&L</span>
-                    <span className="text-green-500">+$12,847.34</span>
+                    <span className="text-[#A1A7B3]">Today&apos;s P&amp;L</span>
+                    <span className="text-[#00C2A8] font-mono">+$12,847.34</span>
                   </div>
                 </div>
               </CardContent>
@@ -183,10 +184,10 @@ export default function ProductPreview() {
                       <span className="font-medium text-white">{item.symbol}</span>
                       <span className="text-[#A1A7B3] ml-2">{item.name}</span>
                     </div>
-                    <div className="flex items-center space-x-2">
+                    <div className="flex items-center space-x-2 font-mono">
                       <span className="text-white">${item.price.toFixed(2)}</span>
-                      <span className={item.change >= 0 ? 'text-green-500' : 'text-red-500'}>
-                        {item.change >= 0 ? '+' : ''}{item.change.toFixed(1)}%
+                      <span className={item.change >= 0 ? "text-[#00C2A8]" : "text-red-400"}>
+                        {item.change >= 0 ? "+" : ""}{item.change.toFixed(1)}%
                       </span>
                     </div>
                   </div>
@@ -195,6 +196,7 @@ export default function ProductPreview() {
             </Card>
           </div>
         </motion.div>
+        <p className="mt-6 text-center text-[11px] text-[#5B6472]">Illustrative dashboard preview</p>
       </div>
     </section>
   );

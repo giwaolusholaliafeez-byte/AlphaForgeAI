@@ -16,10 +16,36 @@ export default function WatchlistPage() {
   const [lastUpdated, setLastUpdated] = useState<string | null>(null);
   const [showAddForm, setShowAddForm] = useState(false);
 
+  const enrichWithLivePrices = useCallback(async (loaded: Array<{ id: string; symbol: string; name: string; assetType: string; price: number | null; change: number | null; changePercent: number | null; href: string; addedAt: string }>) => {
+    const enriched = await Promise.all(
+      loaded.map(async (item) => {
+        try {
+          const assetType = item.href.split("/")[3];
+          const assetId = item.href.split("/")[4];
+          const response = await fetch(`/api/assets/${assetType}/${assetId}`);
+          if (!response.ok) return item;
+          const payload = await response.json() as { data?: { price: number | null; change: number | null; changePercent: number | null } };
+          if (!payload.data || payload.data.price === null) return item;
+          return { ...item, price: payload.data.price, change: payload.data.change, changePercent: payload.data.changePercent };
+        } catch {
+          return item;
+        }
+      })
+    );
+    setItems(enriched);
+  }, []);
+
   useEffect(() => {
     setLastUpdated(formatPortfolioDateTime(new Date().toISOString()));
-    fetch("/api/watchlist").then((response) => response.json()).then((data) => setItems((data.items ?? []).map((item: { id: string; symbol: string; name: string; asset_type: string; asset_id: string; created_at: string }) => ({ id: item.id, symbol: item.symbol, name: item.name, assetType: item.asset_type, price: null, change: null, changePercent: null, href: `/dashboard/markets/${item.asset_type}/${item.asset_id}`, addedAt: item.created_at })))).catch(() => setItems([]));
-  }, []);
+    fetch("/api/watchlist")
+      .then((response) => response.json())
+      .then((data) => {
+        const loaded = (data.items ?? []).map((item: { id: string; symbol: string; name: string; asset_type: string; asset_id: string; created_at: string }) => ({ id: item.id, symbol: item.symbol, name: item.name, assetType: item.asset_type, price: null, change: null, changePercent: null, href: `/dashboard/markets/${item.asset_type}/${item.asset_id}`, addedAt: item.created_at }));
+        setItems(loaded);
+        void enrichWithLivePrices(loaded);
+      })
+      .catch(() => setItems([]));
+  }, [enrichWithLivePrices]);
 
   const handleRefresh = () => {
     setIsRefreshing(true);
@@ -36,22 +62,7 @@ export default function WatchlistPage() {
     }
   };
 
-  const handleSearch = async (query: string) => {
-    await new Promise(resolve => setTimeout(resolve, 300));
-    const allAssets = [
-      { id: "aapl", symbol: "AAPL", name: "Apple", type: "stock", source: "finnhub" },
-      { id: "msft", symbol: "MSFT", name: "Microsoft", type: "stock", source: "finnhub" },
-      { id: "nvda", symbol: "NVDA", name: "NVIDIA", type: "stock", source: "finnhub" },
-      { id: "bitcoin", symbol: "BTC", name: "Bitcoin", type: "crypto", source: "coingecko" },
-      { id: "ethereum", symbol: "ETH", name: "Ethereum", type: "crypto", source: "coingecko" },
-      { id: "spy", symbol: "SPY", name: "SPDR S&P 500 ETF", type: "etf", source: "finnhub" },
-    ];
-    return allAssets
-      .filter(asset => 
-        asset.symbol.toLowerCase().includes(query.toLowerCase()) ||
-        asset.name.toLowerCase().includes(query.toLowerCase())
-      );
-  };
+  const handleSearch = async (query: string) => { const response = await fetch(`/api/markets/search?q=${encodeURIComponent(query)}`); if (!response.ok) throw new Error('Search failed.'); const data = await response.json(); return data.results ?? []; };
 
   const handleAdd = async (result: any) => {
     const response = await fetch("/api/watchlist", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ assetType: result.type, assetId: result.id, symbol: result.symbol, name: result.name }) });
@@ -80,16 +91,7 @@ export default function WatchlistPage() {
           onSearch={async (query) => {
             const results = await handleSearch(query);
 
-            return results.map((result) => ({
-              ...result,
-              type: (
-                result.type === "crypto"
-                  ? "crypto"
-                  : result.type === "etf"
-                    ? "etf"
-                    : "stock"
-              ) as "stock" | "etf" | "crypto",
-            }));
+            return results;
           }}
           onAdd={handleAdd}
           onCancel={() => setShowAddForm(false)}

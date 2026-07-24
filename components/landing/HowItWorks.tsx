@@ -41,7 +41,7 @@ export default function HowItWorks() {
           </p>
         </motion.div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-5xl mx-auto">
+        <div className="mx-auto grid max-w-5xl grid-cols-1 gap-6 md:grid-cols-3">
           {steps.map((step, index) => {
             const Icon = step.icon;
             return (

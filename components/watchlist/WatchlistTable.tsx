@@ -42,6 +42,7 @@ export default function WatchlistTable({ items, onRemove, className }: Watchlist
     etf: "ETF",
     crypto: "Crypto",
     index_proxy: "Proxy",
+    fx: "Forex",
   };
 
   if (items.length === 0) {

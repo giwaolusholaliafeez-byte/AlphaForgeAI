@@ -153,6 +153,7 @@ export default function AssetChart({ assetId, assetType, currentPrice, isPositiv
         {INTERVALS.map((value) => <Button key={value} size="sm" variant={interval === value ? 'default' : 'outline'} disabled={assetType !== 'stock' && assetType !== 'etf' && assetType !== 'fx' || (assetType === 'fx' && value !== '1D' && !intradayAvailable)} onClick={() => setInterval(value)} className={interval === value ? 'bg-[#00C2A8] text-[#071018]' : 'border-[#1E293B] text-[#A1A7B3]'}>{value}</Button>)}
       </div>
 
+      {!candles.length && <p className="text-[11px] text-[#64748B]">Close-price history · genuine OHLC is unavailable for this provider/range.</p>}
       <div className="h-[300px]">
         {candles.length > 0 ? <CandleChart candles={candles} /> : <ResponsiveContainer width="100%" height="100%">
           <LineChart data={data}>

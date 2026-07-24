@@ -2,9 +2,9 @@ import Navigation from "@/components/landing/Navigation";
 import Hero from "@/components/landing/Hero";
 import ProductPreview from "@/components/landing/ProductPreview";
 import Capabilities from "@/components/landing/Capabilities";
-import AIDemo from "@/components/landing/AIDemo";
+import PlatformShowcase from "@/components/landing/PlatformShowcase";
 import HowItWorks from "@/components/landing/HowItWorks";
-import BuiltFor from "@/components/landing/BuiltFor";
+import DataTrust from "@/components/landing/DataTrust";
 import CTA from "@/components/landing/CTA";
 import Footer from "@/components/landing/Footer";
 
@@ -15,9 +15,9 @@ export default function HomePage() {
       <Hero />
       <ProductPreview />
       <Capabilities />
-      <AIDemo />
+      <PlatformShowcase />
       <HowItWorks />
-      <BuiltFor />
+      <DataTrust />
       <CTA />
       <Footer />
     </main>

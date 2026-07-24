@@ -16,6 +16,7 @@ import FirstActionCard from "@/components/dashboard/FirstActionCard";
 import type { UserType } from "@/lib/accounts/types";
 import { getLiveDashboardMarketData } from "@/lib/dashboard/live-market";
 import { getCurrentNews } from "@/lib/market-data/news";
+import { getAssetDetail } from "@/lib/market-data/asset-details";
 
 export default async function DashboardPage() {
   const supabase = await createClient();
@@ -70,6 +71,30 @@ export default async function DashboardPage() {
 
   const displayPortfolio = isDemo ? demoPortfolioData : portfolioData;
   const hasPaperOrders = !isDemo ? Boolean((await supabase.from("paper_orders").select("id", { count: "exact", head: true }).eq("user_id", user.id)).count) : true;
+
+  const { data: watchlistRows, count: watchlistCount } = await supabase
+    .from("watchlist_items")
+    .select("id,asset_type,asset_id,symbol,name", { count: "exact" })
+    .eq("user_id", user.id)
+    .order("created_at", { ascending: false })
+    .limit(5);
+
+  const watchlistItems = (
+    await Promise.all(
+      (watchlistRows ?? []).map(async (row) => {
+        const detail = await getAssetDetail(row.asset_type, row.asset_id).catch(() => null);
+        if (!detail?.data || detail.data.price === null) return null;
+        return {
+          symbol: row.symbol,
+          name: row.name,
+          price: detail.data.price,
+          change: detail.data.changePercent ?? 0,
+          positive: (detail.data.changePercent ?? 0) >= 0,
+          href: `/dashboard/markets/${row.asset_type}/${row.asset_id}`,
+        };
+      })
+    )
+  ).filter((item): item is NonNullable<typeof item> => item !== null);
 
   const marketItems = liveMarket.slice(0, 5);
   const moverItems = liveMarket.filter((item) => item.changePercent !== null && item.symbol !== "SPY" && item.symbol !== "QQQ" && item.symbol !== "VOO").sort((a, b) => (b.changePercent ?? 0) - (a.changePercent ?? 0));
@@ -130,7 +155,7 @@ export default async function DashboardPage() {
 
       {/* Watchlist and News */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-        <WatchlistPreview items={[]} count={0} />
+        <WatchlistPreview items={watchlistItems} count={watchlistCount ?? 0} />
         <NewsPreview items={currentNews.slice(0, 4).map((item) => ({ id: item.id, title: item.headline, source: item.source, time: new Date(item.datetime).toLocaleString(), href: item.url }))} />
       </div>
     </div>

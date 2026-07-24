@@ -1,11 +1,13 @@
 import { getAssetDetail } from "@/lib/market-data/asset-details";
-import { getCryptoHistory, getStockHistory } from "@/lib/market-data/asset-history";
+import { getCryptoHistory, getForexHistory, getStockHistory } from "@/lib/market-data/asset-history";
 import type { AssetType } from "@/lib/market-data/types";
 import type { ResearchContext, ResearchReport, ResearchSource } from "./types";
 
 const providerUrls: Record<string, string> = {
   finnhub: "https://finnhub.io/",
   coingecko: "https://www.coingecko.com/",
+  twelvedata: "https://twelvedata.com/",
+  frankfurter: "https://www.frankfurter.app/",
 };
 
 export async function buildResearchContext(assetType: AssetType, assetId: string): Promise<ResearchContext> {
@@ -14,7 +16,9 @@ export async function buildResearchContext(assetType: AssetType, assetId: string
 
   const history = assetType === "crypto"
     ? await getCryptoHistory(assetId, "1M")
-    : await getStockHistory(assetId, "1M");
+    : assetType === "fx"
+      ? await getForexHistory(assetId, "1M")
+      : await getStockHistory(assetId, "1M");
   const source: ResearchSource = {
     name: detailResponse.source,
     url: providerUrls[detailResponse.source] ?? null,
