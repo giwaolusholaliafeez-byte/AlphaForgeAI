@@ -34,7 +34,7 @@ export default function Footer() {
           </div>
 
           <div>
-            <h4 className="text-sm font-medium mb-3 text-white">Product</h4>
+            <h3 className="text-sm font-medium mb-3 text-white">Product</h3>
             <ul className="space-y-2">
               {productLinks.map((link) => (
                 <li key={link.label}>
@@ -50,7 +50,7 @@ export default function Footer() {
           </div>
 
           <div>
-            <h4 className="text-sm font-medium mb-3 text-white">Account</h4>
+            <h3 className="text-sm font-medium mb-3 text-white">Account</h3>
             <ul className="space-y-2">
               <li>
                 <Link href="/sign-in" className="text-xs text-[#A1A7B3] hover:text-white transition-colors">
@@ -74,9 +74,17 @@ export default function Footer() {
         <Separator className="my-8 bg-[#1E293B]" />
 
         <div className="flex flex-col md:flex-row justify-between items-center gap-4">
-          <p className="text-xs text-[#A1A7B3]">
-            © {new Date().getFullYear()} AlphaForge AI. All rights reserved.
-          </p>
+          <div className="flex items-center gap-4">
+            <p className="text-xs text-[#A1A7B3]">
+              © {new Date().getFullYear()} AlphaForge AI. All rights reserved.
+            </p>
+            <Link href="/privacy" className="text-xs text-[#A1A7B3] hover:text-white transition-colors">
+              Privacy
+            </Link>
+            <Link href="/terms" className="text-xs text-[#A1A7B3] hover:text-white transition-colors">
+              Terms
+            </Link>
+          </div>
           <p className="text-xs text-[#A1A7B3] text-center max-w-2xl">
             <span className="text-white font-medium">Risk Disclosure:</span> AlphaForge AI provides research tools and information
             and does not provide financial advice. Always consult with a qualified financial advisor before making

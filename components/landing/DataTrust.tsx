@@ -21,16 +21,23 @@ const points = [
   },
 ];
 
-const statusFeed = [
-  { label: "Finnhub", detail: "Stocks & ETFs, news", state: "live" as const },
-  { label: "CoinGecko", detail: "Crypto quotes & OHLC", state: "live" as const },
-  { label: "Twelve Data", detail: "Forex intraday", state: "live" as const },
-  { label: "Frankfurter", detail: "Forex daily rates", state: "live" as const },
-  { label: "OpenAI", detail: "Research & copilot", state: "live" as const },
-  { label: "Live order execution", detail: "Brokerage trading", state: "off" as const },
-];
+interface ProviderStatus {
+  finnhub: boolean;
+  coingecko: boolean;
+  twelveData: boolean;
+  openai: boolean;
+}
 
-export default function DataTrust() {
+export default function DataTrust({ providerStatus }: { providerStatus: ProviderStatus }) {
+  const statusFeed = [
+    { label: "Finnhub", detail: "Stocks & ETFs, news", state: providerStatus.finnhub ? ("live" as const) : ("off" as const) },
+    { label: "CoinGecko", detail: "Crypto quotes & OHLC", state: providerStatus.coingecko ? ("live" as const) : ("off" as const) },
+    { label: "Twelve Data", detail: "Forex intraday", state: providerStatus.twelveData ? ("live" as const) : ("off" as const) },
+    { label: "Frankfurter", detail: "Forex daily rates", state: "live" as const },
+    { label: "OpenAI", detail: "Research & copilot", state: providerStatus.openai ? ("live" as const) : ("off" as const) },
+    { label: "Live order execution", detail: "Brokerage trading", state: "off" as const },
+  ];
+
   return (
     <section className="border-t border-white/[0.06] bg-[#0E1420] py-20 sm:py-24">
       <div className="container">

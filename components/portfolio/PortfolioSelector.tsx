@@ -18,6 +18,7 @@ export default function PortfolioSelector({
     <select
       value={selectedId || ''}
       onChange={(e) => onSelect(e.target.value)}
+      aria-label="Select portfolio"
       className="px-3 py-2 rounded-lg bg-[#0B0F1A] border border-[#1E293B] text-white focus:border-[#2563EB] focus:ring-[#2563EB] min-w-[180px]"
     >
       {portfolios.map((portfolio) => (

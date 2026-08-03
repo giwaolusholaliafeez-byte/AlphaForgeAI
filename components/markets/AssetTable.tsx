@@ -56,9 +56,14 @@ export default function AssetTable({ assets, type, onAssetClick }: AssetTablePro
 
   const SortIcon = ({ field }: { field: SortField }) => {
     if (sortField !== field) return <ChevronUp className="h-3 w-3 opacity-30" />;
-    return sortDirection === 'asc' ? 
-      <ChevronUp className="h-3 w-3" /> : 
+    return sortDirection === 'asc' ?
+      <ChevronUp className="h-3 w-3" /> :
       <ChevronDown className="h-3 w-3" />;
+  };
+
+  const getAriaSort = (field: SortField): "ascending" | "descending" | "none" => {
+    if (sortField !== field) return "none";
+    return sortDirection === "asc" ? "ascending" : "descending";
   };
 
   const isCrypto = type === 'crypto';
@@ -99,61 +104,85 @@ export default function AssetTable({ assets, type, onAssetClick }: AssetTablePro
             {isCrypto && (
               <th className="text-left py-3 px-4 font-medium">Rank</th>
             )}
-            <th 
-              className="text-left py-3 px-4 font-medium cursor-pointer hover:text-white transition-colors"
-              onClick={() => handleSort(isFx ? 'pair' : 'symbol')}
+            <th
+              className="text-left py-3 px-4 font-medium"
+              aria-sort={getAriaSort(isFx ? 'pair' : 'symbol')}
             >
-              <div className="flex items-center space-x-1">
+              <button
+                type="button"
+                onClick={() => handleSort(isFx ? 'pair' : 'symbol')}
+                className="flex items-center space-x-1 hover:text-white transition-colors"
+              >
                 <span>{isFx ? 'Pair' : isIndex ? 'Index' : 'Symbol'}</span>
                 <SortIcon field={isFx ? 'pair' : 'symbol'} />
-              </div>
+              </button>
             </th>
-            <th 
-              className="text-left py-3 px-4 font-medium cursor-pointer hover:text-white transition-colors"
-              onClick={() => handleSort('name')}
+            <th
+              className="text-left py-3 px-4 font-medium"
+              aria-sort={getAriaSort('name')}
             >
-              <div className="flex items-center space-x-1">
+              <button
+                type="button"
+                onClick={() => handleSort('name')}
+                className="flex items-center space-x-1 hover:text-white transition-colors"
+              >
                 <span>Name</span>
                 <SortIcon field="name" />
-              </div>
+              </button>
             </th>
-            <th 
-              className="text-right py-3 px-4 font-medium cursor-pointer hover:text-white transition-colors"
-              onClick={() => handleSort('price')}
+            <th
+              className="text-right py-3 px-4 font-medium"
+              aria-sort={getAriaSort('price')}
             >
-              <div className="flex items-center justify-end space-x-1">
+              <button
+                type="button"
+                onClick={() => handleSort('price')}
+                className="flex items-center justify-end space-x-1 hover:text-white transition-colors ml-auto"
+              >
                 <span>{isFx ? 'Rate' : isIndex ? 'Level' : 'Price'}</span>
                 <SortIcon field="price" />
-              </div>
+              </button>
             </th>
-            <th 
-              className="text-right py-3 px-4 font-medium cursor-pointer hover:text-white transition-colors"
-              onClick={() => handleSort('changePercent')}
+            <th
+              className="text-right py-3 px-4 font-medium"
+              aria-sort={getAriaSort('changePercent')}
             >
-              <div className="flex items-center justify-end space-x-1">
+              <button
+                type="button"
+                onClick={() => handleSort('changePercent')}
+                className="flex items-center justify-end space-x-1 hover:text-white transition-colors ml-auto"
+              >
                 <span>Daily Change</span>
                 <SortIcon field="changePercent" />
-              </div>
+              </button>
             </th>
             {isCrypto ? (
               <>
-                <th 
-                  className="text-right py-3 px-4 font-medium cursor-pointer hover:text-white transition-colors"
-                  onClick={() => handleSort('marketCap')}
+                <th
+                  className="text-right py-3 px-4 font-medium"
+                  aria-sort={getAriaSort('marketCap')}
                 >
-                  <div className="flex items-center justify-end space-x-1">
+                  <button
+                    type="button"
+                    onClick={() => handleSort('marketCap')}
+                    className="flex items-center justify-end space-x-1 hover:text-white transition-colors ml-auto"
+                  >
                     <span>Market Cap</span>
                     <SortIcon field="marketCap" />
-                  </div>
+                  </button>
                 </th>
-                <th 
-                  className="text-right py-3 px-4 font-medium cursor-pointer hover:text-white transition-colors"
-                  onClick={() => handleSort('volume')}
+                <th
+                  className="text-right py-3 px-4 font-medium"
+                  aria-sort={getAriaSort('volume')}
                 >
-                  <div className="flex items-center justify-end space-x-1">
+                  <button
+                    type="button"
+                    onClick={() => handleSort('volume')}
+                    className="flex items-center justify-end space-x-1 hover:text-white transition-colors ml-auto"
+                  >
                     <span>Volume</span>
                     <SortIcon field="volume" />
-                  </div>
+                  </button>
                 </th>
               </>
             ) : (
@@ -169,9 +198,19 @@ export default function AssetTable({ assets, type, onAssetClick }: AssetTablePro
             const isClickable = route !== '#';
             
             return (
-              <tr 
+              <tr
                 key={asset.id || asset.symbol}
                 onClick={() => isClickable ? null : handleRowClick(asset)}
+                onKeyDown={(event) => {
+                  if (isClickable) return;
+                  if (event.key === 'Enter' || event.key === ' ') {
+                    event.preventDefault();
+                    handleRowClick(asset);
+                  }
+                }}
+                tabIndex={isClickable ? undefined : 0}
+                role={isClickable ? undefined : 'button'}
+                aria-label={isClickable ? undefined : `View ${getDisplaySymbol(asset)} details`}
                 className={`border-b border-[#0B0F1A] hover:bg-[#1E293B]/50 transition-colors group ${!isClickable ? 'cursor-pointer' : ''}`}
               >
                 {isCrypto && (

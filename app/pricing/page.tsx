@@ -1,7 +1,13 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import PricingPlans from "./PricingPlans";
 import { getProPlanPricing } from "@/lib/billing/plans";
 import { getUserSubscription } from "@/lib/billing/entitlements";
+
+export const metadata: Metadata = {
+  title: "Pricing | AlphaForge AI",
+  description: "Choose the level of market intelligence you need — from core markets and simulated trading to deeper AI research and higher limits.",
+};
 
 export default async function PricingPage() {
   const [pricing, subscription] = await Promise.all([getProPlanPricing(), getUserSubscription()]);

@@ -9,9 +9,10 @@ import { MarketSearchResult } from "@/lib/market-data/types";
 interface AssetSearchProps {
   onSearch: (query: string) => Promise<MarketSearchResult[]>;
   onSelect: (result: MarketSearchResult) => void;
+  id?: string;
 }
 
-export default function AssetSearch({ onSearch, onSelect }: AssetSearchProps) {
+export default function AssetSearch({ onSearch, onSelect, id }: AssetSearchProps) {
   const [query, setQuery] = useState("");
   const [results, setResults] = useState<MarketSearchResult[]>([]);
   const [isLoading, setIsLoading] = useState(false);
@@ -83,8 +84,10 @@ export default function AssetSearch({ onSearch, onSelect }: AssetSearchProps) {
       <div className="relative">
         <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-[#A1A7B3]" />
         <Input
+          id={id}
           type="text"
           placeholder="Search stocks, ETFs, crypto..."
+          aria-label={id ? undefined : "Search for an asset"}
           value={query}
           onChange={(e) => setQuery(e.target.value)}
           onFocus={() => query.length >= 2 && results.length > 0 && setIsOpen(true)}
@@ -93,6 +96,7 @@ export default function AssetSearch({ onSearch, onSelect }: AssetSearchProps) {
         {query && (
           <button
             onClick={handleClear}
+            aria-label="Clear search"
             className="absolute right-3 top-1/2 -translate-y-1/2 text-[#A1A7B3] hover:text-white"
           >
             <X className="h-4 w-4" />

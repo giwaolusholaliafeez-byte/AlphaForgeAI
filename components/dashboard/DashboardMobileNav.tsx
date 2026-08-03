@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
@@ -37,6 +37,9 @@ interface DashboardMobileNavProps {
 export default function DashboardMobileNav({ user }: DashboardMobileNavProps) {
   const [open, setOpen] = useState(false);
   const pathname = usePathname();
+  const drawerRef = useRef<HTMLDivElement>(null);
+  const triggerButtonRef = useRef<HTMLButtonElement>(null);
+  const closeButtonRef = useRef<HTMLButtonElement>(null);
 
   // Prevent body scroll when drawer is open
   useEffect(() => {
@@ -50,19 +53,48 @@ export default function DashboardMobileNav({ user }: DashboardMobileNavProps) {
     };
   }, [open]);
 
-  // Close on escape key
+  // Move focus into the drawer on open, and back to the trigger on close
   useEffect(() => {
-    const handleEscape = (e: KeyboardEvent) => {
-      if (e.key === "Escape") setOpen(false);
+    if (open) {
+      closeButtonRef.current?.focus();
+    } else {
+      triggerButtonRef.current?.focus();
+    }
+  }, [open]);
+
+  // Close on escape key, trap Tab focus within the drawer while open
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        setOpen(false);
+        return;
+      }
+      if (e.key !== "Tab" || !open || !drawerRef.current) return;
+
+      const focusable = drawerRef.current.querySelectorAll<HTMLElement>(
+        'a[href], button:not([disabled]), input, select, textarea, [tabindex]:not([tabindex="-1"])'
+      );
+      if (focusable.length === 0) return;
+      const first = focusable[0];
+      const last = focusable[focusable.length - 1];
+
+      if (e.shiftKey && document.activeElement === first) {
+        e.preventDefault();
+        last.focus();
+      } else if (!e.shiftKey && document.activeElement === last) {
+        e.preventDefault();
+        first.focus();
+      }
     };
-    document.addEventListener("keydown", handleEscape);
-    return () => document.removeEventListener("keydown", handleEscape);
-  }, []);
+    document.addEventListener("keydown", handleKeyDown);
+    return () => document.removeEventListener("keydown", handleKeyDown);
+  }, [open]);
 
   return (
     <>
       {/* Menu Button */}
       <Button
+        ref={triggerButtonRef}
         variant="ghost"
         size="icon"
         onClick={() => setOpen(true)}
@@ -83,6 +115,7 @@ export default function DashboardMobileNav({ user }: DashboardMobileNavProps) {
 
       {/* Drawer */}
       <div
+        ref={drawerRef}
         className={cn(
           "fixed inset-y-0 left-0 z-50 h-[100dvh] w-[min(86vw,320px)] overscroll-contain border-r border-white/[0.06] bg-[#0B0F1A] pb-[env(safe-area-inset-bottom)] pt-[env(safe-area-inset-top)] transition-transform duration-300 ease-out md:hidden",
           open ? "translate-x-0" : "-translate-x-full"
@@ -109,6 +142,7 @@ export default function DashboardMobileNav({ user }: DashboardMobileNavProps) {
               </span>
             </div>
             <Button
+              ref={closeButtonRef}
               variant="ghost"
               size="icon"
               onClick={() => setOpen(false)}

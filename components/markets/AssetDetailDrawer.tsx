@@ -47,6 +47,7 @@ export default function AssetDetailDrawer({ asset, open, onOpenChange }: AssetDe
               variant="ghost"
               size="icon"
               onClick={() => onOpenChange(false)}
+              aria-label="Close asset details"
               className="text-[#A1A7B3] hover:text-white"
             >
               <X className="h-5 w-5" />

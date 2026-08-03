@@ -184,6 +184,7 @@ export default function AddHoldingForm({ portfolioId, onSuccess, onCancel }: Add
           variant="ghost"
           size="icon"
           onClick={onCancel}
+          aria-label="Close add holding form"
           className="h-8 w-8 text-[#A1A7B3] hover:text-white"
         >
           <X className="h-4 w-4" />
@@ -278,6 +279,7 @@ export default function AddHoldingForm({ portfolioId, onSuccess, onCancel }: Add
                   variant="ghost"
                   size="sm"
                   onClick={handleClearSelection}
+                  aria-label="Clear selected asset"
                   className="text-[#A1A7B3] hover:text-white"
                 >
                   <X className="h-4 w-4" />

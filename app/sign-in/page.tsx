@@ -1,5 +1,11 @@
+import type { Metadata } from "next";
 import { Suspense } from "react";
 import SignInContent from "./SignInContent";
+
+export const metadata: Metadata = {
+  title: "Sign in | AlphaForge AI",
+  description: "Sign in to your AlphaForge AI workspace to access live markets, AI research, and portfolio monitoring.",
+};
 
 function SignInLoading() {
   return (

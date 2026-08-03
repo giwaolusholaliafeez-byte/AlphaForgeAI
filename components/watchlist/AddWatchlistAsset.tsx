@@ -125,6 +125,7 @@ export default function AddWatchlistAsset({
           variant="ghost"
           size="icon"
           onClick={onCancel}
+          aria-label="Close add to watchlist form"
           className="h-8 w-8 text-[#A1A7B3] hover:text-white"
         >
           <X className="h-4 w-4" />
@@ -152,6 +153,7 @@ export default function AddWatchlistAsset({
         {query && !selectedResult && (
           <button
             onClick={handleClear}
+            aria-label="Clear search"
             className="absolute right-3 top-1/2 -translate-y-1/2 text-[#A1A7B3] hover:text-white"
           >
             <X className="h-4 w-4" />
@@ -205,6 +207,7 @@ export default function AddWatchlistAsset({
               variant="ghost"
               size="sm"
               onClick={() => setSelectedResult(null)}
+              aria-label="Clear selected asset"
               className="text-[#A1A7B3] hover:text-white"
             >
               <X className="h-4 w-4" />

@@ -120,6 +120,7 @@ export default function AskAlphaForge() {
           value={question}
           onChange={(event) => setQuestion(event.target.value)}
           placeholder={turns.length ? "Ask a follow-up..." : "Ask about your portfolio..."}
+          aria-label="Ask AlphaForge a question"
           disabled={isLoading}
           className="min-w-0 flex-1 rounded-lg border border-white/[0.08] bg-[#0B0F1A] px-3 text-sm text-white outline-none focus:border-[#00C2A8] disabled:opacity-50"
         />

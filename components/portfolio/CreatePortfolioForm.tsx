@@ -87,6 +87,7 @@ export default function CreatePortfolioForm({ onSuccess, open, onOpenChange }: C
           variant="ghost"
           size="icon"
           onClick={handleCancel}
+          aria-label="Close create portfolio form"
           className="text-[#A1A7B3] hover:text-white"
         >
           <X className="h-4 w-4" />

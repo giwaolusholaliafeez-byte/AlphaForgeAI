@@ -187,6 +187,7 @@ export default function HoldingsTable({
                           <Button
                             variant="ghost"
                             size="icon"
+                            aria-label={`Open ${h.symbol} asset page`}
                             className="h-8 w-8 text-[#A1A7B3] hover:text-white"
                           >
                             <ExternalLink className="h-4 w-4" />
@@ -197,6 +198,7 @@ export default function HoldingsTable({
                         variant="ghost"
                         size="icon"
                         onClick={() => setEditingHoldingId(h.id)}
+                        aria-label={`Edit ${h.symbol} holding`}
                         className="h-8 w-8 text-[#A1A7B3] hover:text-white"
                       >
                         <Edit2 className="h-4 w-4" />
@@ -205,6 +207,7 @@ export default function HoldingsTable({
                         variant="ghost"
                         size="icon"
                         onClick={() => handleRemove(h.id)}
+                        aria-label={`Remove ${h.symbol} holding`}
                         className="h-8 w-8 text-red-500 hover:text-red-400"
                       >
                         <Trash2 className="h-4 w-4" />

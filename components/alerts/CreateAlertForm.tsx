@@ -85,6 +85,7 @@ export default function CreateAlertForm({ onCancel, onCreate, initialSelected = 
           variant="ghost"
           size="icon"
           onClick={onCancel}
+          aria-label="Close create alert form"
           className="h-8 w-8 text-[#A1A7B3] hover:text-white"
         >
           <X className="h-4 w-4" />
@@ -120,7 +121,7 @@ export default function CreateAlertForm({ onCancel, onCreate, initialSelected = 
               </Button>
             </div>
           ) : (
-            <AssetSearch onSearch={searchAssets} onSelect={(result) => setSelected(result)} />
+            <AssetSearch id="asset" onSearch={searchAssets} onSelect={(result) => setSelected(result)} />
           )}
           <p className="text-[10px] text-[#A1A7B3]">Search by symbol or name, e.g. AAPL, Bitcoin</p>
         </div>

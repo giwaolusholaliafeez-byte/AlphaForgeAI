@@ -227,6 +227,8 @@ export default function PlatformShowcase() {
           transition={{ duration: 0.5, delay: 0.1 }}
           viewport={{ once: true }}
           className="grid gap-3 sm:grid-cols-2 lg:grid-cols-5"
+          role="tablist"
+          aria-label="Platform features"
         >
           {showcaseTabs.map((tab) => {
             const Icon = tab.icon;
@@ -234,6 +236,10 @@ export default function PlatformShowcase() {
             return (
               <button
                 key={tab.id}
+                id={`showcase-tab-${tab.id}`}
+                role="tab"
+                aria-selected={isActive}
+                aria-controls="showcase-panel"
                 onClick={() => setActive(tab.id)}
                 className={`group flex items-start gap-3 rounded-xl border p-4 text-left transition-colors ${
                   isActive
@@ -263,7 +269,12 @@ export default function PlatformShowcase() {
             <span className="h-2.5 w-2.5 rounded-full bg-white/10" />
             <span className="h-2.5 w-2.5 rounded-full bg-white/10" />
           </div>
-          <div className="min-h-[280px] p-6 sm:p-8">
+          <div
+            className="min-h-[280px] p-6 sm:p-8"
+            id="showcase-panel"
+            role="tabpanel"
+            aria-labelledby={`showcase-tab-${active}`}
+          >
             <AnimatePresence mode="wait">
               <motion.div
                 key={active}
